@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   compile:
-    uses: edithatogo/repository-standards/.github/workflows/latex-ci.yml@f37a6c6a9764766ac25d2c65c7ec71f3a7a9fd87 # main
+    uses: edithatogo/repository-standards/.github/workflows/latex-ci.yml@7874f05132447c77f681fbca7ad5394066564aaf # main
     with:
       root-file: example/Thesis.tex
       working-directory: "."
