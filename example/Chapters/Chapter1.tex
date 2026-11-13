@@ -47,17 +47,17 @@ Figure \fref{fig:tikz_example} shows a simple figure. For more complex layouts, 
     \centering
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{unimelb_logo.eps} % Placeholder, replace with actual image
+        \fbox{\parbox[c][35mm][c]{0.85\textwidth}{\centering Example graphic}} % Self-contained example: no external logo required
         \caption{First subfigure.}
         \label{fig:subfigure_a}
     \end{subfigure}
     \hfill % adds horizontal space between the subfigures
     \begin{subfigure}[b]{0.45\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{unimelb_logo.eps} % Placeholder, replace with actual image
+        \fbox{\parbox[c][35mm][c]{0.85\textwidth}{\centering Example graphic}} % Self-contained example: no external logo required
         \caption{Second subfigure.}
         \label{fig:subfigure_b}
-    </end{subfigure}
+    \end{subfigure}
     \caption{Example of two subfigures using the `subcaption` package.}
     \label{fig:subfigures_example}
 \end{figure}

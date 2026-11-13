@@ -229,6 +229,8 @@
 \newcommand*{\addresses}[1]{\def\addressnames{#1}}
 \newcommand*{\university}[1]{\def\univname{#1}}
 \newcommand*{\UNIVERSITY}[1]{\def\UNIVNAME{#1}}
+% Fall back to the ordinary university name if an uppercase variant is not provided.
+\providecommand*{\UNIVNAME}{\MakeUppercase{\univname}}
 \newcommand*{\universityurl}[1]{\def\univurl{#1}}
 \newcommand*{\school}[1]{\def\schoolname{#1}}
 \newcommand*{\SCHOOL}[1]{\def\SCHOOLNAME{#1}}
