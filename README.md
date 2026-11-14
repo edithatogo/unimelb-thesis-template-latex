@@ -25,6 +25,7 @@ These files demonstrate the template's output and can be used as references for 
 
 * A full LaTeX distribution, such as [TeX Live](https://www.tug.org/texlive/), [MiKTeX](https://miktex.org/), or [MacTeX](https://www.tug.org/mactex/).
 * `biber`: For processing the bibliography (usually included with TeX distributions).
+* `make`, `qpdf`, and Poppler utilities (`pdfinfo` and `pdftotext`): For running `make verify`.
 * `chktex` (optional): For linting LaTeX code.
 * `latexindent` (optional): For formatting LaTeX code.
 
@@ -32,24 +33,24 @@ These files demonstrate the template's output and can be used as references for 
 
 ### Local Compilation
 
-1. Navigate to the `example` directory: `cd example`
-2. Run `latexmk`:
+1. Open a terminal in the repository root (the directory containing `.latexmkrc`).
+2. Build and validate the example:
 
     ```bash
-    latexmk Thesis.tex
+    make verify
     ```
 
-    This will compile the document (`Thesis.tex`), run `biber` for the bibliography, and re-compile as needed, producing `Thesis.pdf` in the `example/out/` directory.
+    This rebuilds `example/Thesis.tex` with LuaLaTeX and shell escape disabled, then checks that `example/out/Thesis.pdf` is nonempty, structurally valid, readable by Poppler, and contains extractable text. Compilation or validation errors fail the command. To compile without PDF validation, run `make build`.
 3. To clean up auxiliary files:
 
     ```bash
-    latexmk -c
+    latexmk -c example/Thesis.tex
     ```
 
     And to clean up all generated files (including PDF):
 
     ```bash
-    latexmk -C
+    make clean
     ```
 
 ### Usage with Overleaf
