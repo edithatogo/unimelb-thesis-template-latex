@@ -311,6 +311,8 @@ class BuildAndReplayChecks(unittest.TestCase):
             (output / "unrelated-private.txt").write_text("must not be retained", encoding="utf-8")
         elif command[0] == "pdfinfo":
             return "Pages: 12\n"
+        elif command[0] == "pdffonts":
+            return GOOD_FONTS
         elif command[0] == "pdftotext":
             return self.texts[len(self.builds) - 1]
         return ""
