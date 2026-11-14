@@ -175,13 +175,13 @@
 %                            % and for PDF metadata. Loaded with common useful options.
 %                            % colorlinks: Colors links instead of using boxes.
 %                            % linkcolor, citecolor, urlcolor: Can be changed (e.g., to 'black' for printing).
-%                            % pdfstartview={FitV}: Fits page width to viewer.
+%                            % pdfstartview={Fit}: Fits the whole page in the viewer.
 %                            % unicode: For Unicode characters in bookmarks.
 %                            % breaklinks: Allows long URLs to break across lines.
 \usepackage[pdfpagemode={UseOutlines},bookmarks=true,bookmarksopen=true,
 	bookmarksopenlevel=0,bookmarksnumbered=true,hypertexnames=false,
 	colorlinks,linkcolor={blue},citecolor={blue},urlcolor={red},
-	pdfstartview={FitV},unicode,breaklinks=true]{hyperref}
+	pdfstartview={Fit},unicode,breaklinks=true]{hyperref}
 \usepackage{microtype} % Improves typography (e.g., character protrusion, font expansion). Subtle but good.
 \usepackage{siunitx}   % For typesetting values with units.
 \usepackage{tikz}      % For creating vector graphics.
