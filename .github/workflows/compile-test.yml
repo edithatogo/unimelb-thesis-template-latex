@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   compile:
-    uses: edithatogo/repository-standards/.github/workflows/latex-ci.yml@f37a6c6a9764766ac25d2c65c7ec71f3a7a9fd87 # main
+    uses: edithatogo/repository-standards/.github/workflows/latex-ci.yml@6e2d5e55f7b1af8d6a0e7ccc34202661573dac58 # Container PDF permission fix
     with:
       root-file: example/Thesis.tex
       working-directory: "."
