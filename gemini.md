@@ -1,13 +1,5 @@
-# Gemini CLI Session Information
+# Gemini entry point
 
-This file contains information relevant to the Gemini CLI's interaction with this repository.
-
-## Last Action
-
-- **Action:** Git Rebase
-- **Details:** Successfully rebased local `main` branch onto `origin/main`. Resolved a `rename/delete` conflict by accepting the deletion of `example/out/minimal_thesis.bcf-SAVE-ERROR`.
-
-## Next Steps (from todo.md)
-
-- Review rebased changes and ensure everything is as expected.
-- Push changes to remote repository (`git push origin main`).
+Read [AGENTS.md](AGENTS.md) for the canonical repository instructions before
+working here. Reconcile current Git state and open PRs; this file is not a task
+log. Validation, security and integration rules are shared by all assistants.
