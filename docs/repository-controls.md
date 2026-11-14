@@ -15,7 +15,7 @@ source dependencies, successful check evidence and unresolved blockers.
 | History | Block branch deletion and force pushes |
 | Changes | Require a pull request |
 | Human approval | Zero approvals; no CODEOWNERS, last-push, team or review-thread gate |
-| Automated checks | The two proven contexts below, bound to GitHub Actions app `15368` |
+| Automated checks | The six qualified contexts below, bound to GitHub Actions app `15368` |
 | Base freshness | Require checks against the latest base |
 | Recovery | Only owner `edithatogo` (user ID `15080672`) has a pull-request-only bypass |
 
@@ -24,26 +24,40 @@ merge queue or change tag-only publication.
 
 ## Check and bot inventory
 
-Both selected contexts passed on main commit
-`003a5cc11dfcd1c2763781bc5c535d3640fd987a` and on the final head of
-[Renovate PR #11](https://github.com/edithatogo/unimelb-thesis-template-latex/pull/11),
-`2609b29b4cfa0690e8d3890ee59b7fa4dd995351`.
+The original build/privacy contexts passed on main `003a5cc11dfcd1c2763781bc5c535d3640fd987a`
+and Renovate PR #11 head `2609b29b4cfa0690e8d3890ee59b7fa4dd995351`.
+[PR #15](https://github.com/edithatogo/unimelb-thesis-template-latex/pull/15) then
+qualified the current six repository-owned gates on final head
+`a7a7fcdbbff10a6b2c2b380cf19f00f9a19b10bf`, merged as
+`805d7accbeb953aa121ba1d00d30055e8ff939e3`.
 
-| Exact context | Source | Successful PR evidence |
+| Exact required context | Source | Observed evidence |
 | --- | --- | --- |
-| `compile / build` | GitHub Actions, app `15368` | [LaTeX build](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43531035885/job/132248501501) |
-| `privacy-and-secrets` | GitHub Actions, app `15368` | [Privacy/secret scan](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43531035592/job/132248500644) |
+| `compile / build` | GitHub Actions, app `15368` | [Successful job](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43607792819/job/132486100090) |
+| `privacy-and-secrets` | GitHub Actions, app `15368` | [Successful job](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43607792822/job/132486099603) |
+| `Actionlint` | GitHub Actions, app `15368` | [Successful job](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43607792807/job/132486100080) |
+| `Dependency review` | GitHub Actions, app `15368` | [Successful job](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43607792784/job/132486098807) |
+| `CodeQL CI (actions)` | GitHub Actions, app `15368` | [Successful job](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43607792742/job/132486100332) |
+| `CodeQL CI (python)` | GitHub Actions, app `15368` | [Successful job](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43607792742/job/132486100008) |
 
 `LaTeX CI` is a workflow name, not the emitted context. Read check runs for the
 current PR head and latest base; an empty legacy status list is not a failed
-check, and a queued or cancelled run is not a pass.
+check, and queued/cancelled runs are not passes. Verify all six on the final
+head before applying the proposal. Their events and failure thresholds are
+specified in [the verification contract](quality-checks.md).
 
-Renovate is the active update bot. CodeRabbit and the Codex connector have
-historical review comments, but neither is a required gate or bypass actor.
-New checks need their own successful evidence before becoming required. The
-tag-only release and unprovisioned offline-security draft
+Renovate is the active updater. CodeRabbit and the Codex connector have optional
+historical reviews and no bypass. The separate GitHub-managed `Analyze (actions)`
+and `CodeQL` checks are not required here: the repository-owned CodeQL CI contexts
+have explicit stable names and fail on findings/incomplete SARIF. The managed
+native-alert configuration still needs owner inspection; standalone CI artifacts
+do not prove native Python alerts are enabled. Preserve existing Default setup
+until that decision is made, as described in the verification contract.
+
+The tag-only release and unprovisioned offline-security draft
 [PR #13](https://github.com/edithatogo/unimelb-thesis-template-latex/pull/13)
-are not merge requirements.
+are not merge requirements. Do not add a coverage-service gate before actual
+service operation is verified.
 
 ## Apply and verify the ruleset
 
@@ -119,15 +133,18 @@ and merged PR #11. `renovate.json` inherits `github>edithatogo/renovate-config` 
 enables the dashboard. No Dependabot config existed at the audited baseline.
 Verify actual replacement updates before removing an existing update service.
 
-Codecov is **not applicable to the inspected typesetting-only baseline**, which
-has no instrumented executable test suite. PDF validation does not produce source
-line coverage. Do not upload empty/fabricated coverage or require a nonexistent
-coverage check. Reassess when executable tooling/tests arrive through
-[issue #7](https://github.com/edithatogo/unimelb-thesis-template-latex/issues/7),
-[issue #9](https://github.com/edithatogo/unimelb-thesis-template-latex/issues/9)
-or other work: identify meaningful coverage that can be collected, or record a
-specific evidence-backed exclusion. Do not carry forward the no-tests rationale
-without checking the delivered source.
+The starting typesetting-only tree had no executable tests, so Codecov was then
+not applicable. **That baseline exclusion no longer applies:** PR #15 added 40
+Python regression tests for `scripts/verify.py` and `scripts/check_codeql.py`.
+Python helper coverage is meaningful and measurable; TeX line coverage remains
+unsuitable as a document-correctness threshold.
+
+Coverage collection and Codecov onboarding must be recorded separately. [PR #17](https://github.com/edithatogo/unimelb-thesis-template-latex/pull/17), the
+#9 integration work, is coordinating coverage; this change does not claim that
+an upload or the service is operational. Until an actual report/upload is verified,
+mark service integration pending, upload no empty/fabricated coverage and require
+no nonexistent Codecov check. Reconcile the current coverage work before closing
+#8 or umbrella #9.
 
 ## References
 

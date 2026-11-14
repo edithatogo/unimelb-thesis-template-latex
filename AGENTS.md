@@ -7,7 +7,8 @@ link here rather than maintain conflicting instructions or stale task state.
 ## Scope and coordination
 
 - `template/` contains the class and supporting styles; `example/` contains the
-  example thesis; `.latexmkrc` and `Makefile` define the local build.
+  example thesis; `scripts/` and `tests/` implement executable validation.
+  `.latexmkrc` and `Makefile` define the build and verification commands.
 - Check the current default branch, open PRs and the working tree before editing.
   Preserve uncommitted work and use an isolated branch when another task is active.
 - Keep changes focused on the requested issue. Reuse an existing implementation
@@ -19,9 +20,11 @@ link here rather than maintain conflicting instructions or stale task state.
 ## Validation and evidence
 
 Run `make verify` **from the repository root** before proposing a change. It
-rebuilds `example/Thesis.tex` using LuaLaTeX with shell escape disabled and checks
-the generated `example/out/Thesis.pdf` with qpdf and Poppler. The required tools
-and the PDF inspection checklist are in [CONTRIBUTING.md](CONTRIBUTING.md).
+runs the regression tests, builds the supplied example from clean temporary
+inputs with shell escape disabled, and retains the validated PDF at
+`build/verification/Thesis.pdf`. Follow [the verification contract](docs/quality-checks.md)
+for output, reference, bibliography/glossary and timeout checks. The required
+tools and PDF inspection checklist are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Compilation and PDF validation must fail closed. Do not ignore a failed command,
 replace a missing tool with a successful no-op, or reuse a tracked demonstration
