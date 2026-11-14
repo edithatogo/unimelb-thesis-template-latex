@@ -32,3 +32,8 @@ example/out/
 # Other
 .DS_Store
 session_log.txt
+
+# Verification artifacts and Python bytecode
+build/
+__pycache__/
+*.pyc

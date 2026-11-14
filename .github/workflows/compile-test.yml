@@ -3,7 +3,16 @@ on:
   push:
     branches: [main]
   pull_request:
+  merge_group:
+    types: [checks_requested]
+  schedule:
+    - cron: '41 4 * * 0'
   workflow_dispatch:
+    inputs:
+      replay:
+        description: Compare text from two independent clean builds
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -11,9 +20,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   compile:
-    uses: edithatogo/repository-standards/.github/workflows/latex-ci.yml@6e2d5e55f7b1af8d6a0e7ccc34202661573dac58 # Container PDF permission fix
+    uses: ./.github/workflows/verify-thesis.yml
     with:
-      root-file: example/Thesis.tex
-      working-directory: "."
-      pdf-file: example/out/Thesis.pdf
-      artifact-name: unimelb-thesis-pdf
+      replay: ${{ github.event_name == 'schedule' || inputs.replay == true }}

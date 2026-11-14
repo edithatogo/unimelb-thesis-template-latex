@@ -1,32 +1,19 @@
-# .latexmkrc
-#
-# latexmk configuration file
-#
-
-# Use lualatex as the compiler
-$latex = 'lualatex %O %S';
-$pdflatex = 'lualatex %O %S';
-
-# Use biber as the bibliography backend
-$bibtex = 'biber %O %S';
-
-# Add the template directory to TEXINPUTS
+# Build from the repository root. Verification overrides the output directory
+# with a fresh temporary directory, so checked-in PDFs cannot satisfy the gate.
+$pdf_mode = 4;
+$lualatex = 'lualatex -no-shell-escape %O %S';
+$biber = 'biber %O %S';
 ensure_path('TEXINPUTS', 'template//');
-
-# Add a rule for chktex
-add_cus_dep('tex', 'chktexrc', 0, 'chktex');
-sub chktex {
-  system('chktex --nowarn 3,18,36 "' . $_[0] . '"');
-}
-
-# Add a rule for latexindent
-add_cus_dep('tex', 'latexindent', 0, 'latexindent');
-sub latexindent {
-  system('latexindent -w -s -y "' . $_[0] . '"');
-}
-
-# Run chktex and latexindent on all tex files
-@default_files = glob('example/*.tex');
-
-# Set the output directory
+@default_files = ('example/Thesis.tex');
 $out_dir = 'example/out';
+
+# Run glossary tools explicitly, without enabling TeX shell escape.
+use File::Basename;
+add_cus_dep('glo', 'gls', 0, 'build_glossaries');
+add_cus_dep('acn', 'acr', 0, 'build_glossaries');
+sub build_glossaries {
+  my ($base) = @_;
+  return system('makeglossaries', '-d', dirname($base), basename($base));
+}
+
+# Formatting is an explicit authoring operation, never a build side effect.
