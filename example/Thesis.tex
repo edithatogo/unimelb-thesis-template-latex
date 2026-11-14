@@ -4,7 +4,10 @@
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% IMPORTANT NOTE TO AUTHOR:
-%% As part of the guidelines, the use of the university logo is not permitted. This template contains it to make it easier to find/recognise in the Overleaf Gallery. To make the template compliant please go to 'Thesis.cls' and comment out the \includegraphics command in line 217 (it is clearly highlited).
+%% This is a synthetic draft example, not a submission-ready thesis.
+%% See docs/rendered-semantics.md for the selected automated checks and limits.
+%% The title-page logo is disabled. Replace the example metadata and complete
+%% the current institutional checklist before preparing a submission.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 %% ----------------------------------------------------------------
@@ -27,9 +30,9 @@
 
 % Thesis information
 \thesistype{PhD Thesis}
-\submissiondate{Today}
+\submissiondate{January 2025} % Fixed synthetic date; set the actual submission month/year.
 \title{A Modernised Thesis Template}
-\authors{Doughnut}
+\authors{Example Author}
 \degree{Doctor of Philosophy}
 \university{The University of Melbourne}
 \universityurl{https://www.unimelb.edu.au}
@@ -43,7 +46,7 @@
 \keywords{LaTeX, Template, Modernisation, Gemini CLI}
 \supervisor{Gemini CLI}
 \examiner{The User}
-\orcid{https://orcid.org/0000-0000-0000-0000} % Replace with actual ORCID
+\orcid{} % Omitted in this synthetic draft; supply a valid author ORCID for submission.
 
 %% ----------------------------------------------------------------
 \makeindex
@@ -60,7 +63,7 @@
 % Define the page headers using the FancyHdr package and set up for one-sided printing
 \fancyhead{}  % Clears all page headers and footers
 \rhead{\thepage}  % Sets the right side header to show the page number
-\lhead{}  % Clears the left side page header
+\lhead{}  % Clears the left side header
 
 \pagestyle{fancy}  % Finally, use the "fancy" page style to implement the FancyHdr headers
 
@@ -164,6 +167,9 @@ $\omega$ & angular frequency & rads$^{-1}$ \\
 %\\input{Chapters/Chapter7} % Conclusion
 
 %% ----------------------------------------------------------------
+% Bibliography precedes the appendices in the institutional document sequence.
+\printbibliography
+
 % Now begin the Appendices, including them as separate files
 
 \addtocontents{toc}{\vspace{2em}} % Add a gap in the Contents, for aesthetics
@@ -180,7 +186,5 @@ $\omega$ & angular frequency & rads$^{-1}$ \\
 
 
 %% ----------------------------------------------------------------
-\printbibliography
-
 \end{document}  % The End
 %% ----------------------------------------------------------------
