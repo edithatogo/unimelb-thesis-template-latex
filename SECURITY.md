@@ -30,6 +30,12 @@ Publication credentials belong only in the tag-triggered release job, never in
 the source tree or PR environment. Preserve the privacy and secret scans, and
 investigate findings without publishing raw sensitive matches.
 
+The standalone CodeQL CI gate analyzes Actions and Python, validates complete
+SARIF results and fails on findings. It retains artifacts with read-only
+permissions and disables native code-scanning uploads. Preserve the separate
+GitHub-managed default setup; see
+[CodeQL configuration](docs/repository-controls.md#codeql-configuration).
+
 Validation must fail on compilation errors or invalid PDF output. Keep generated
 artifacts separate from source and use `make verify` as documented in
 [CONTRIBUTING.md](CONTRIBUTING.md). A successful build does not prove the safety

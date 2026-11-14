@@ -4,6 +4,8 @@ Use a focused branch and pull request. Check existing issues and PRs first so
 parallel work can share the same build and validation tools. This repository is
 maintained by one person; automated checks are the merge gate and no human,
 CODEOWNERS or team approval is mandatory.
+Resolve review conversations before merging; the maintainer can do so without
+an approving review or a second reviewer.
 
 ## Build and validate
 
@@ -36,7 +38,8 @@ policy compliance. Document any relevant visual limitation.
 
 ## Verifier coverage
 
-Coverage is an optional local tooling step and a CI gate for the Python verifier.
+Coverage is an optional local tooling step and a CI gate for the Python helpers
+in `scripts/`, including the build verifier and CodeQL results gate.
 Using Python 3.11 or newer, install the hash-pinned development dependency in a
 virtual environment:
 
@@ -76,6 +79,9 @@ bot without a deliberate migration that preserves update coverage. Pin GitHub
 Actions to full commit SHAs and keep PR jobs read-only by default. A job that
 uploads security results may receive the narrowly scoped `security-events: write`
 permission; that is not permission to modify source or publish a release.
+The standalone CodeQL CI workflow keeps native uploads disabled and retains
+SARIF artifacts with read-only permissions. Preserve GitHub-managed default
+setup separately; see [CodeQL configuration](docs/repository-controls.md#codeql-configuration).
 
 Use public or synthetic examples. Report security vulnerabilities using the
 private route described in [SECURITY.md](SECURITY.md), and never include secrets

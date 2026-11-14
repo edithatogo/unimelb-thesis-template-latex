@@ -36,7 +36,7 @@
         "require_code_owner_review": false,
         "require_last_push_approval": false,
         "required_approving_review_count": 0,
-        "required_review_thread_resolution": false
+        "required_review_thread_resolution": true
       }
     },
     {
@@ -50,6 +50,22 @@
           },
           {
             "context": "privacy-and-secrets",
+            "integration_id": 15368
+          },
+          {
+            "context": "Actionlint",
+            "integration_id": 15368
+          },
+          {
+            "context": "Dependency review",
+            "integration_id": 15368
+          },
+          {
+            "context": "CodeQL CI (actions)",
+            "integration_id": 15368
+          },
+          {
+            "context": "CodeQL CI (python)",
             "integration_id": 15368
           }
         ],
