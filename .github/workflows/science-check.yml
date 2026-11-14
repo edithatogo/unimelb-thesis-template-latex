@@ -1,0 +1,49 @@
+name: Scientific authoring smoke test
+
+on:
+  pull_request:
+    paths:
+      - "template/thesis-science.sty"
+      - "examples/science-demo.tex"
+      - "scripts/verify_science.py"
+      - "scripts/verify.py"
+      - "tests/test_science.py"
+      - "Makefile"
+      - ".github/workflows/science-check.yml"
+  push:
+    branches: [main]
+    paths:
+      - "template/thesis-science.sty"
+      - "examples/science-demo.tex"
+      - "scripts/verify_science.py"
+      - "scripts/verify.py"
+      - "tests/test_science.py"
+      - "Makefile"
+      - ".github/workflows/science-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: science-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  science-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Compile and verify synthetic science fixture
+        uses: xu-cheng/texlive-action@22c04326a5d855880f9d39bb955138bf11c6df80 # v3
+        with:
+          docker_image: ghcr.io/xu-cheng/texlive-debian:latest@sha256:78ac2204b8df113aca0561e8f173ad5b89ee51e90795173d2fe9bcf0fbce162e
+          run: |
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq
+            apt-get install --yes --no-install-recommends make python3 qpdf poppler-utils
+            make science-check
