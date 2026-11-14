@@ -1,0 +1,42 @@
+% A fully synthetic, independently compiled opt-in feature fixture.
+\documentclass[a4paper]{article}
+\usepackage{thesis-science}
+\begin{document}
+\section{Scientific authoring fixture}
+\begin{thesistakehome}
+The effect estimate is illustrative, not an empirical finding.
+\end{thesistakehome}
+\begin{thesisplainlanguage}
+This example shows how the optional scientific features render.
+\end{thesisplainlanguage}
+\begin{thesiskeyterms}
+Uncertainty: a range of plausible values under stated assumptions.
+\end{thesiskeyterms}
+\begin{equation} E = mc^2. \end{equation}
+\begin{table}[ht]
+\centering
+\caption{Synthetic resource-use quantities}
+\begin{tabularx}{\linewidth}{lXr}
+\toprule
+Category & Description & Count\\
+\midrule
+One & Example observation & 3\\
+Two & Example observation & 5\\
+\bottomrule
+\end{tabularx}
+\end{table}
+\begin{algorithm}[ht]
+\caption{Synthetic calculation}
+$z\gets 0$\;
+\For{$i\gets 1$ \KwTo $3$}{$z\gets z+i$\;}
+\end{algorithm}
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.62\linewidth,xlabel={Input},ylabel={Value}]
+\addplot coordinates {(0,0) (1,1) (2,4) (3,9)};
+\end{axis}
+\end{tikzpicture}
+\caption{Synthetic quadratic sequence}
+\end{figure}
+\end{document}

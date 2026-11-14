@@ -1,0 +1,37 @@
+%% Optional scientific-authoring features. Not loaded by the base thesis class.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{thesis-science}[2026/11/15 v0.1 Optional scientific authoring]
+
+\RequirePackage{amsmath}
+\RequirePackage{mathtools}
+\RequirePackage{booktabs}
+\RequirePackage{tabularx}
+\RequirePackage{siunitx}
+\RequirePackage{tikz}
+\RequirePackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\RequirePackage[ruled,vlined]{algorithm2e}
+\RequirePackage{pdfpages}
+\RequirePackage{pdflscape}
+\RequirePackage{xcolor}
+\RequirePackage{tcolorbox}
+\tcbuselibrary{breakable,skins}
+
+%% Namespaced, breakable boxes; basic typography remains readable in greyscale.
+\newtcolorbox{thesistakehome}[1][]{
+  breakable, colback=black!2, colframe=black!65,
+  boxrule=0.4pt, leftrule=2pt, arc=0pt,
+  fonttitle=\bfseries, title={Take-home message}, #1
+}
+\newtcolorbox{thesisplainlanguage}[1][]{
+  breakable, colback=black!2, colframe=black!65,
+  boxrule=0.4pt, leftrule=2pt, arc=0pt,
+  fonttitle=\bfseries, title={Plain-language summary}, #1
+}
+\newtcolorbox{thesiskeyterms}[1][]{
+  breakable, colback=black!2, colframe=black!65,
+  boxrule=0.4pt, leftrule=2pt, arc=0pt,
+  fonttitle=\bfseries, title={Key terms}, #1
+}
+\endinput
