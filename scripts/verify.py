@@ -138,6 +138,31 @@ def normalize_text(text: str) -> str:
     return " ".join(text.split())
 
 
+
+def validate_font_inventory(report: str) -> int:
+    """Accept only a nonempty Poppler inventory with every font embedded."""
+    lines = [line for line in report.splitlines() if line.strip()]
+    if (
+        len(lines) < 2
+        or not lines[0].lstrip().startswith("name ")
+        or not set(lines[1].strip()) <= {"-", " "}
+    ):
+        raise VerificationError("Malformed PDF font inventory header")
+    count = 0
+    for line in lines[2:]:
+        # Font names/types contain spaces; inspect the stable right-hand columns:
+        # embedded, subset, unicode, object number, generation number.
+        parts = line.split()
+        if len(parts) < 7 or any(value not in ("yes", "no") for value in parts[-5:-2]):
+            raise VerificationError("Malformed PDF font inventory row")
+        if parts[-5] != "yes":
+            raise VerificationError("PDF font not embedded: " + parts[0])
+        count += 1
+    if not count:
+        raise VerificationError("PDF font inventory contains no fonts")
+    return count
+
+
 def validate_outputs(output_dir: Path, repo_root: Path, env: dict[str, str]) -> dict:
     pdf = require_file(output_dir / "Thesis.pdf")
     log = require_file(output_dir / "Thesis.log")
@@ -155,6 +180,11 @@ def validate_outputs(output_dir: Path, repo_root: Path, env: dict[str, str]) -> 
     pages = re.search(r"^Pages:\s+(\d+)\s*$", info, re.MULTILINE)
     if not pages or int(pages.group(1)) < 1:
         raise VerificationError("PDF must report a positive page count")
+    fonts = run_command(
+        ["pdffonts", str(pdf)], cwd=repo_root, env=env, timeout=PDF_TIMEOUT,
+        reject_stderr=True,
+    )
+    embedded_font_count = validate_font_inventory(fonts)
     text = run_command(
         ["pdftotext", "-enc", "UTF-8", str(pdf), "-"],
         cwd=repo_root, env=env, timeout=PDF_TIMEOUT, reject_stderr=True,
@@ -170,6 +200,7 @@ def validate_outputs(output_dir: Path, repo_root: Path, env: dict[str, str]) -> 
         raise VerificationError("PDF is missing expected content: " + ", ".join(missing_content))
     return {
         "page_count": int(pages.group(1)),
+        "embedded_font_count": embedded_font_count,
         "normalized_text_characters": len(normalized),
         "normalized_text_sha256": hashlib.sha256(normalized.encode("utf-8")).hexdigest(),
         "required_sections": list(REQUIRED_SECTIONS),
