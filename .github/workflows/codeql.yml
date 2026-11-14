@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   analyze:
-    name: Analyze (${{ matrix.language }})
+    name: CodeQL CI (${{ matrix.language }})
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:

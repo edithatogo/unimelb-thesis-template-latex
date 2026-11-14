@@ -48,7 +48,7 @@ the whole compiler process group, not only the latexmk parent.
 | --- | --- | --- | --- |
 | `compile / build` | Every PR, main push, merge group, manual; weekly replay | 20-minute job; 300 seconds per compile; 30 seconds per PDF command; zero hard validation failures | Validated PDF and verification logs/JSON, retained 14 days |
 | `Actionlint` | Every PR, main push, manual | 5 minutes; zero workflow/ShellCheck errors | Actionlint output in the job log |
-| `Analyze (actions)` and `Analyze (python)` | Every PR, main push, manual, weekly | 15 minutes per language; security-extended analysis; zero findings; valid SARIF required | SARIF reports retained as CI artifacts for 14 days |
+| `CodeQL CI (actions)` and `CodeQL CI (python)` | Every PR, main push, manual, weekly | 15 minutes per language; security-extended analysis; zero findings; valid SARIF required | SARIF reports retained as CI artifacts for 14 days |
 | `Dependency review` | Every PR | 5 minutes; newly introduced known vulnerabilities at low severity or above fail | Dependency review job summary |
 | Privacy and secrets | Existing PR/main/merge-group/manual/weekly triggers | Existing 30-minute limit and Gitleaks/Presidio policy | Existing privacy job output; raw findings are not uploaded |
 | Release verification | Version tags only | The same verification workflow and thresholds as PRs | The exact verified PDF is downloaded by the publication job |
