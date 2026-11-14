@@ -10,7 +10,7 @@ Makefile. The earlier two-workflow inventory in the issue was outdated.
 
 Run commands from the repository root. A full TeX Live installation must provide
 LuaLaTeX, latexmk, Biber and makeglossaries. Also install Python 3.10 or newer,
-GNU Make, qpdf and Poppler (`pdfinfo`, `pdftotext`). Python validation uses only
+GNU Make, qpdf and Poppler (`pdfinfo`, `pdffonts`, `pdftotext`). Python validation uses only
 the standard library.
 
 ```sh
@@ -26,7 +26,7 @@ The ordinary verifier and test commands retain their Python 3.10+ requirement.
 `make verify` compiles the example into a new temporary directory. Neither the
 tracked example PDFs nor a previous successful build can satisfy the check.
 It fails on a compiler or tool error, PDF-tool diagnostics, missing or empty
-required output, invalid PDF structure, zero pages, blank extracted text,
+required output, invalid PDF structure, zero pages, nonembedded/missing fonts, blank extracted text,
 missing required sections or rendered example content,
 unresolved references or citations, or incomplete bibliography/glossary
 processing. Build and PDF-tool subprocesses have finite timeouts. Non-fatal
@@ -58,6 +58,8 @@ builds with the same fixed source date and compares normalized extracted text
 and page count. It checks repeatability in one toolchain. It does **not**
 establish PDF byte identity across platforms, TeX distributions, fonts, or
 future tool upgrades.
+
+The verification receipt records the embedded font count, as reported by Poppler. It is a PDF portability check, not PDF/UA or PDF/A conformance testing.
 
 The local evidence directories are `build/verification/` and, for replay,
 `build/replay/`. Only the generated example PDF and explicitly selected
