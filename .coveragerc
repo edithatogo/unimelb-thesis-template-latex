@@ -1,0 +1,12 @@
+[run]
+core = pytrace
+branch = True
+source = scripts
+data_file = build/coverage/.coverage
+
+[report]
+fail_under = 80
+show_missing = True
+
+[xml]
+output = build/coverage/coverage.xml

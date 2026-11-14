@@ -25,13 +25,16 @@ supply-chain inputs.
 GitHub Actions must use immutable commit pins and the permissions needed for the
 job. PR checks use read-only permissions by default and do not retain checkout
 credentials. Security-analysis jobs may receive `security-events: write` solely
-to upload native findings, without source-write or release permissions. The
-current CodeQL CI gates retain standalone SARIF with read-only permissions;
-[their configuration](docs/quality-checks.md#codeql-results-and-repository-setup)
-is separate from GitHub's managed native-alert setup.
+to upload their findings, without source-write or release permissions.
 Publication credentials belong only in the tag-triggered release job, never in
 the source tree or PR environment. Preserve the privacy and secret scans, and
 investigate findings without publishing raw sensitive matches.
+
+The standalone CodeQL CI gate analyzes Actions and Python, validates complete
+SARIF results and fails on findings. It retains artifacts with read-only
+permissions and disables native code-scanning uploads. Preserve the separate
+GitHub-managed default setup; see
+[CodeQL configuration](docs/repository-controls.md#codeql-configuration).
 
 Validation must fail on compilation errors or invalid PDF output. Keep generated
 artifacts separate from source and use `make verify` as documented in

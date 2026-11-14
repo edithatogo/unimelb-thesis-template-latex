@@ -33,6 +33,13 @@ REQUIRED_SECTIONS = (
     "Introduction",
     "Glossary",
     "Bibliography",
+    "An Appendix",
+)
+# Headings can appear in the contents or chapter prose without the section body.
+REQUIRED_CONTENT = (
+    "The TeXbook",
+    "A document preparation system",
+    "Vivamus at pulvinar nisi.",
 )
 HARD_LOG_ERRORS = (
     ("TeX error", r"^!|(?:LaTeX|Package [^\n]+) Error:|Emergency stop|Fatal error|Runaway argument"),
@@ -61,7 +68,10 @@ def command_diagnostic(stdout: str | bytes | None, stderr: str | bytes | None) -
     return f"\nCommand output (last {DIAGNOSTIC_LIMIT} characters):\n{combined[-DIAGNOSTIC_LIMIT:]}"
 
 
-def run_command(command: list[str], *, cwd: Path, env: dict[str, str], timeout: int) -> str:
+def run_command(
+    command: list[str], *, cwd: Path, env: dict[str, str], timeout: int,
+    reject_stderr: bool = False,
+) -> str:
     """Bound commands and their POSIX process group; non-POSIX fallback kills the parent."""
     try:
         process = subprocess.Popen(
@@ -101,6 +111,10 @@ def run_command(command: list[str], *, cwd: Path, env: dict[str, str], timeout: 
         raise VerificationError(
             f"{command[0]} exited with status {process.returncode}" + command_diagnostic(stdout, stderr)
         )
+    if reject_stderr and stderr.strip():
+        raise VerificationError(
+            f"{command[0]} produced diagnostic output on stderr" + command_diagnostic(stdout, stderr)
+        )
     return stdout
 
 
@@ -134,13 +148,16 @@ def validate_outputs(output_dir: Path, repo_root: Path, env: dict[str, str]) -> 
             raise VerificationError(f"No generated entries in {filename}")
 
     run_command(["qpdf", "--check", str(pdf)], cwd=repo_root, env=env, timeout=PDF_TIMEOUT)
-    info = run_command(["pdfinfo", str(pdf)], cwd=repo_root, env=env, timeout=PDF_TIMEOUT)
+    info = run_command(
+        ["pdfinfo", str(pdf)], cwd=repo_root, env=env, timeout=PDF_TIMEOUT,
+        reject_stderr=True,
+    )
     pages = re.search(r"^Pages:\s+(\d+)\s*$", info, re.MULTILINE)
     if not pages or int(pages.group(1)) < 1:
         raise VerificationError("PDF must report a positive page count")
     text = run_command(
         ["pdftotext", "-enc", "UTF-8", str(pdf), "-"],
-        cwd=repo_root, env=env, timeout=PDF_TIMEOUT,
+        cwd=repo_root, env=env, timeout=PDF_TIMEOUT, reject_stderr=True,
     )
     normalized = normalize_text(text)
     if not normalized:
@@ -148,11 +165,15 @@ def validate_outputs(output_dir: Path, repo_root: Path, env: dict[str, str]) -> 
     missing = [section for section in REQUIRED_SECTIONS if section not in normalized]
     if missing:
         raise VerificationError("PDF is missing expected sections: " + ", ".join(missing))
+    missing_content = [content for content in REQUIRED_CONTENT if content not in normalized]
+    if missing_content:
+        raise VerificationError("PDF is missing expected content: " + ", ".join(missing_content))
     return {
         "page_count": int(pages.group(1)),
         "normalized_text_characters": len(normalized),
         "normalized_text_sha256": hashlib.sha256(normalized.encode("utf-8")).hexdigest(),
         "required_sections": list(REQUIRED_SECTIONS),
+        "required_content": list(REQUIRED_CONTENT),
     }
 
 

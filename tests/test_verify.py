@@ -15,7 +15,12 @@ from scripts import verify
 
 
 GOOD_LOG = "This is LuaHBTeX.\nOutput written on Thesis.pdf (12 pages, 2048 bytes).\n"
-GOOD_TEXT = "\n".join(verify.REQUIRED_SECTIONS) + "\nA synthetic thesis example.\n"
+GOOD_TEXT = "\n".join(verify.REQUIRED_SECTIONS) + """
+A synthetic thesis example.
+The TeXbook
+A document preparation system
+Vivamus at pulvinar nisi.
+"""
 
 
 def write_outputs(directory: Path) -> None:
@@ -57,6 +62,10 @@ class OutputChecks(unittest.TestCase):
         self.assertEqual(len(report["normalized_text_sha256"]), 64)
         self.assertEqual([command[0] for command, _ in self.commands], ["qpdf", "pdfinfo", "pdftotext"])
         self.assertTrue(all(options["timeout"] == 30 for _, options in self.commands))
+        self.assertEqual(
+            [options.get("reject_stderr", False) for _, options in self.commands],
+            [False, True, True],
+        )
 
     def test_missing_or_empty_required_outputs_fail(self):
         for filename in ("Thesis.pdf", "Thesis.log", "Thesis.bbl", "Thesis.gls"):
@@ -133,6 +142,19 @@ class OutputChecks(unittest.TestCase):
                 with self.assertRaisesRegex(verify.VerificationError, "missing expected sections"):
                     self.check()
 
+    def test_generated_files_and_headings_cannot_replace_rendered_content(self):
+        cases = (
+            ("Bibliography", "The TeXbook"),
+            ("Glossary", "A document preparation system"),
+            ("An Appendix", "Vivamus at pulvinar nisi."),
+        )
+        for heading, content in cases:
+            with self.subTest(content=content):
+                self.text = GOOD_TEXT.replace(content, "")
+                self.assertIn(heading, self.text)
+                with self.assertRaisesRegex(verify.VerificationError, "missing expected content"):
+                    self.check()
+
     def test_build_output_symlinks_are_rejected(self):
         (self.output / "Thesis.pdf").unlink()
         (self.output / "Thesis.pdf").symlink_to(self.output / "Thesis.log")
@@ -141,11 +163,33 @@ class OutputChecks(unittest.TestCase):
 
 
 class ExternalCommandChecks(unittest.TestCase):
-    def call(self, program, *arguments, timeout=5):
+    def call(self, program, *arguments, timeout=5, reject_stderr=False):
         return verify.run_command(
             [sys.executable, "-c", program, *arguments],
             cwd=Path("."), env=os.environ.copy(), timeout=timeout,
+            reject_stderr=reject_stderr,
         )
+
+    def test_success_status_with_pdf_warning_on_stderr_is_rejected(self):
+        warning = "Syntax Warning: Annotation destination array is too short"
+        with self.assertRaisesRegex(verify.VerificationError, "diagnostic output on stderr") as caught:
+            self.call(
+                "import sys; print('Pages: 12'); print(sys.argv[1], file=sys.stderr)",
+                warning, reject_stderr=True,
+            )
+        self.assertIn(warning, str(caught.exception))
+        self.assertIn("Pages: 12", str(caught.exception))
+
+    def test_strict_command_accepts_success_and_blank_stderr(self):
+        output = self.call(
+            "import sys; print('Pages: 12'); print('  ', file=sys.stderr)",
+            reject_stderr=True,
+        )
+        self.assertEqual(output, "Pages: 12\n")
+
+    def test_ordinary_command_may_emit_nonfatal_stderr(self):
+        output = self.call("import sys; print('compiled'); print('typography warning', file=sys.stderr)")
+        self.assertEqual(output, "compiled\n")
 
     def test_nonzero_status_retains_actual_stdout_and_stderr(self):
         with self.assertRaises(verify.VerificationError) as caught:

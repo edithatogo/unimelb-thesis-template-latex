@@ -1,16 +1,16 @@
 # University of Melbourne Thesis Template
 
-This is a modernized version of the University of Melbourne PhD thesis template. It has been updated to use modern LaTeX packages and best practices, making it easier to use, customize, and maintain. The template complies with the latest University of Melbourne thesis preparation guidelines (version 3, 11 June 2025).
+This is a modernized version of the University of Melbourne PhD thesis template. It uses modern LaTeX packages and includes a worked example. Authors must check current university submission requirements; successful template verification does not establish institutional compliance.
 
 ## Features
 
 * Modern Packages: Utilizes `biblatex` for bibliography, `fontspec` for Unicode fonts, `geometry` for page layout, `hyperref` for PDF features, `microtype` for typography, and more.
 * Structured Example: A comprehensive `example/` directory showcasing common thesis elements like figures, tables, equations, and code listings.
 * Automated Build: Includes a `.latexmkrc` file for automated compilation with `lualatex` and `biber`.
-* Code Quality: Pre-configured for `chktex` (linter) and `latexindent` (formatter).
+* Verification: Clean builds check PDF structure, rendered content, bibliography, glossary and cross-references; behavioral tests exercise the verifier.
 * Clear Customization: Well-commented class file (`template/Thesis.cls`) and example files.
-* CI/CD Integration: GitHub Actions for verified compilation, workflow linting, security checks, and tag-only releases.
-* Latest Guidelines Compliance: Updated to 2025 thesis preparation guidelines, including ORCID support, AI declarations, and no university logo usage.
+* CI/CD Integration: Automated verification, workflow linting, dependency review, privacy scanning and tag-only releases; formatting remains opt-in.
+* Thesis Metadata: Examples include ORCID support and declarations, subject to the author's institutional review.
 
 ## Compiled Example
 
@@ -19,18 +19,14 @@ A compiled PDF example is available for immediate download:
 * **[Thesis-example.pdf](Thesis-example.pdf)** - Complete compiled thesis example in the repository root
 * **[example/Thesis-compiled.pdf](example/Thesis-compiled.pdf)** - Same file in the example directory
 
-These files demonstrate the template's output and can be used as references for formatting and structure.
-For output verified against current source, run `make verify` or download the
-`unimelb-thesis-pdf` artifact from a successful [LaTeX CI run](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/workflows/compile-test.yml).
-The checked-in PDFs are reference snapshots.
+These committed examples illustrate formatting and structure. They are not proof that the current source passes verification; use the newly generated PDF for that review.
 
 ## Requirements
 
 * A full LaTeX distribution, such as [TeX Live](https://www.tug.org/texlive/), [MiKTeX](https://miktex.org/), or [MacTeX](https://www.tug.org/mactex/).
-* `biber`: For processing the bibliography (usually included with TeX distributions).
-* `makeglossaries`: For building the glossary (usually included with TeX distributions).
-* GNU Make: For the repository's build and verification commands.
-* Python 3.10 or newer, `qpdf`, and Poppler (`pdfinfo`, `pdftotext`): For verification.
+* LuaLaTeX, `latexmk`, `biber`, and `makeglossaries`: For compilation and reference material (usually included with full TeX distributions).
+* Python 3.10 or newer, GNU Make, `qpdf`, and Poppler utilities (`pdfinfo` and `pdftotext`): For running `make verify`.
+* Python 3.11 or newer and the hash-pinned development requirements: Only for the optional local `make coverage` command; see [CONTRIBUTING.md](CONTRIBUTING.md#verifier-coverage).
 * `chktex` (optional): For linting LaTeX code.
 * `latexindent` (optional): For formatting LaTeX code.
 
@@ -38,28 +34,17 @@ The checked-in PDFs are reference snapshots.
 
 ### Local Compilation
 
-1. Run commands from the repository root.
-2. Build your thesis:
-
-    ```bash
-    make build
-    ```
-
-    This forces a LuaLaTeX build of `example/Thesis.tex` with shell escape disabled, runs Biber and makeglossaries as needed, and produces `example/out/Thesis.pdf`. Plain `make` runs the same command.
-3. Before contributing a change, verify the supplied example:
+1. Open a terminal in the repository root (the directory containing `.latexmkrc`).
+2. Build and validate the example:
 
     ```bash
     make verify
     ```
 
-    This runs the regression tests, compiles into a fresh temporary directory, and checks the final log, PDF, expected sections, bibliography and glossary. Inspect `build/verification/Thesis.pdf`; the same directory contains its log and JSON report. The verifier expects the supplied example's title and sections, so use `make build` for a thesis with different content. See [Testing and CI applicability](docs/quality-checks.md) for `make test`, `make replay`, limits and retained evidence.
-4. To remove the authoring build's generated files, including its PDF:
+    This runs verifier tests, compiles `example/Thesis.tex` in a fresh temporary directory with shell escape disabled, and validates the PDF and reference material. The retained PDF is `build/verification/Thesis.pdf`, with selected diagnostics and `report.json` alongside it. Compilation or validation errors fail the command. Temporary build files are cleaned automatically.
+3. Run `make test` for the fast verifier suite without TeX. Run `make replay` for two fresh builds that must produce the same normalized text and page count in the same toolchain; replay evidence is retained in `build/replay/`.
 
-    ```bash
-    make clean
-    ```
-
-    Verification evidence under `build/` remains available for inspection.
+The output assertions describe this repository's example. Update them deliberately when adapting the example to a different thesis. They do not replace visual review or institutional requirements. See [quality checks](docs/quality-checks.md) for verification and coverage limits.
 
 ### Usage with Overleaf
 
@@ -119,9 +104,9 @@ Advanced customization can be done in `template/Thesis.cls`:
 ## Troubleshooting
 
 * **Compilation Errors:**
-  * For `make build`, check `example/out/Thesis.log`. For `make verify`, check `build/verification/Thesis.log` and `report.json`; failures before TeX creates a log are recorded in the report.
+  * Check `build/verification/report.json` and the retained `Thesis.log` for details. A failure before the compiler creates a log may appear only in the report or command output.
   * Ensure all necessary packages are installed.
-  * Use the repository-root build commands so latexmk can handle repeated LaTeX passes, Biber, the glossary and the template search path.
+  * Run `make verify` from the repository root so the class, bibliography and input paths resolve consistently; latexmk manages the necessary compilation passes.
 * **Fonts Not Found:** If you've changed fonts via `fontspec`, ensure they are correctly named and installed on your system (or supported by Overleaf).
 * **Bibliography Issues:**
   * Ensure `biber` is run correctly (automated by `latexmk`).
@@ -142,45 +127,8 @@ This template attempts to follow several LaTeX best practices:
 
 ## Contributing
 
-Contributions to improve this template are welcome! Please feel free to submit a pull request or open an issue with suggestions or bug reports.
-(This is a placeholder, you can expand this section if you wish).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for validation and PDF review, and [repository controls](docs/repository-controls.md) for automated gates and outstanding settings acceptance.
 
 ## License
 
-This template itself is provided under a permissive license like MIT or CC0 (you should choose one and add a `LICENSE` file).
-The University of Melbourne logo is subject to the University's branding guidelines and copyright.
-Any documents produced using this template are the property and responsibility of the author.
-
-**Placeholder for License Choice:**
-You should choose a license (e.g., MIT License) and add a `LICENSE.md` file to the repository root.
-Example text for MIT License:
-
-```text
-MIT License
-
-Copyright (c) [Year] [Your Name/Group]
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-Remember to replace `[Year]` and `[Your Name/Group]`.
-
-## Note
-
-This README provides a starting point. Feel free to expand or modify it further.
+The template is licensed under the [MIT License](LICENSE). University branding assets remain subject to the University's own rights and branding rules. Authors are responsible for documents produced with the template.
