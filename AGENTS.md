@@ -8,6 +8,8 @@ link here rather than maintain conflicting instructions or stale task state.
 
 - `template/` contains the class and supporting styles; `example/` contains the
   example thesis; `.latexmkrc` and `Makefile` define the local build.
+- `scripts/` contains the clean-build verifier and standalone CodeQL results
+  gate; `tests/` contains their regression tests.
 - Check the current default branch, open PRs and the working tree before editing.
   Preserve uncommitted work and use an isolated branch when another task is active.
 - Keep changes focused on the requested issue. Reuse an existing implementation
@@ -41,16 +43,19 @@ Formatting is opt-in and must not silently rewrite source during verification.
 - Keep publication tag-only. An ordinary push or PR must never publish a release.
 - Retain zero mandatory human approvals: no required reviewers, CODEOWNERS
   approval, last-push approval, or team gate. Review bots remain optional.
+- Resolve review conversations before merging. The solo maintainer may resolve
+  them; this does not add an approving-review or second-maintainer requirement.
 - Merge through a PR after inspecting checks on its current head and current base.
   Do not bypass a failing check as a routine way to merge.
 - Follow [SECURITY.md](SECURITY.md) for vulnerability reporting and sensitive data.
 - Follow [repository controls](docs/repository-controls.md) for the intended
   ruleset, stable check names, bot inventory and owner recovery. A committed
   ruleset file is a proposal until GitHub settings are applied and read back.
-- Preserve the existing GitHub-managed CodeQL default setup. Do not add a
-  competing advanced workflow; verify Python analysis after the verifier reaches
-  main. Coverage applies to the Python verifier, not TeX source; a local XML report
-  does not establish Codecov service integration.
+- Preserve GitHub-managed CodeQL default setup and the standalone Actions/Python
+  CodeQL CI gate. Keep standalone analysis uploads disabled; do not add competing
+  native code-scanning uploads. Verify native Python analysis separately after
+  the verifier reaches main. Coverage applies to the Python helpers in `scripts/`,
+  not TeX source; a local XML report does not establish Codecov service integration.
 - Update a dated drift receipt when settings or gate names change. Preserve
   unresolved blockers explicitly; do not close an issue on configuration intent
   alone. Offline security drafts remain unmerged until their stated provisioning

@@ -4,6 +4,8 @@ Use a focused branch and pull request. Check existing issues and PRs first so
 parallel work can share the same build and validation tools. This repository is
 maintained by one person; automated checks are the merge gate and no human,
 CODEOWNERS or team approval is mandatory.
+Resolve review conversations before merging; the maintainer can do so without
+an approving review or a second reviewer.
 
 ## Build and validate
 
@@ -36,7 +38,8 @@ policy compliance. Document any relevant visual limitation.
 
 ## Verifier coverage
 
-Coverage is an optional local tooling step and a CI gate for the Python verifier.
+Coverage is an optional local tooling step and a CI gate for the Python helpers
+in `scripts/`, including the build verifier and CodeQL results gate.
 Using Python 3.11 or newer, install the hash-pinned development dependency in a
 virtual environment:
 
@@ -49,9 +52,14 @@ make coverage
 
 This runs the tests under coverage.py 7.17.3, measures statements and branches,
 requires at least 80% branch-aware total coverage, and writes
-`build/coverage/coverage.xml`. It does not measure TeX output correctness or upload
-to Codecov. Report the actual result; no measured percentage is implied by the
+`build/coverage/coverage.xml`. This local command does not measure TeX output
+correctness or upload to Codecov. Report the actual result; no percentage is implied by the
 configured floor. See [quality checks](docs/quality-checks.md) for the gates.
+
+CI retains this XML and configures a separate `Codecov upload` job to send the
+same run's artifact using OIDC, without a stored upload token. Service onboarding
+and processing of the exact commit's report must be verified before claiming
+successful integration; see [repository controls](docs/repository-controls.md#dependency-updates-and-coverage).
 
 ## Pull-request evidence
 
@@ -76,6 +84,9 @@ bot without a deliberate migration that preserves update coverage. Pin GitHub
 Actions to full commit SHAs and keep PR jobs read-only by default. A job that
 uploads security results may receive the narrowly scoped `security-events: write`
 permission; that is not permission to modify source or publish a release.
+The standalone CodeQL CI workflow keeps native uploads disabled and retains
+SARIF artifacts with read-only permissions. Preserve GitHub-managed default
+setup separately; see [CodeQL configuration](docs/repository-controls.md#codeql-configuration).
 
 Use public or synthetic examples. Report security vulnerabilities using the
 private route described in [SECURITY.md](SECURITY.md), and never include secrets
