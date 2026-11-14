@@ -11,6 +11,10 @@ source dependencies, successful check evidence and unresolved blockers.
 The [issue #9 integration receipt](evidence/issue-9-integration-2026-11-15.md)
 reconciles the later verifier, coverage and CodeQL changes without rewriting that
 historical baseline.
+The [current-main reconciliation](evidence/issue-8-2026-11-15.md#service-and-hosted-reconciliation-on-current-main)
+records successful native Python analysis and processed Codecov evidence after
+PRs #16, #20, #23 and #24 merged. Those service results do not activate the ruleset:
+the latest settings read still reports no rulesets and an unprotected main branch.
 
 | Control | Desired behavior |
 | --- | --- |
@@ -136,11 +140,11 @@ and merged PR #11. `renovate.json` inherits `github>edithatogo/renovate-config` 
 enables the dashboard. No Dependabot config existed at the audited baseline.
 Verify actual replacement updates before removing an existing update service.
 
-The original typesetting-only baseline had no executable coverage suite. PR #15
-adds a Python verifier, so that exclusion no longer applies to the delivered
-tooling. `make coverage` now instruments statements and branches in both Python
-helpers under `scripts/`, using
-hash-pinned coverage.py, with an 80% branch-aware total floor and an XML artifact.
+The original typesetting-only baseline had no executable coverage suite. That
+exclusion no longer applies: `scripts/check_codeql.py`, `scripts/verify.py` and
+`scripts/verify_science.py` are executable Python helpers. `make coverage`
+instruments their statements and branches using hash-pinned coverage.py, with
+an 80% branch-aware total floor and an XML artifact.
 See [the setup and scope](../CONTRIBUTING.md#verifier-coverage). Measured local and
 hosted results belong to the checked commit; the configured threshold is not a
 passing result. TeX output quality still needs compilation and PDF inspection.
@@ -151,12 +155,24 @@ that coverage report using [OIDC authentication](https://github.com/codecov/code
 Only this job receives `id-token: write`; repository contents remain read-only.
 No stored upload token or owner-wide tokenless setting change is required.
 
-Codecov onboarding and successful ingestion remain **pending verification**.
-The [Codecov GitHub App needs access to this repository](https://docs.codecov.com/docs/quick-start).
-A retained XML or successful upload step alone does not prove report processing:
-record the exact commit, workflow run and populated Codecov report before
-claiming activation. Do not upload fabricated/empty coverage, add an unverified
-badge, or require a service check before its actual context is qualified.
+Codecov activation and processing are **verified for main commit
+`dbfe80897a0616babeaa41341b54ffcbea79c867`**. Its
+[coverage and upload run](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43641749972)
+passed, and the [processed commit report](https://app.codecov.io/gh/edithatogo/unimelb-thesis-template-latex/commit/dbfe80897a0616babeaa41341b54ffcbea79c867)
+contains all three helpers. The public provider API returned `active: true`,
+`activated: true` and commit state `complete` with populated totals.
+
+The hosted coverage.py job passed 53 tests and reported **86% branch-aware total**
+(321 statements, 47 missed statements, 112 branches and 10 partial branches).
+Codecov reports **82.24%** with 321 lines, 264 hits, 47 misses and 10 partials.
+These are different metrics; the Codecov percentage does not replace the local
+80% branch-aware gate or the historical measurements for earlier source trees.
+
+This verifies one exact commit's report, not all future uploads. Retain the
+same-run XML, uploader result and populated provider report when qualifying a
+new head. Do not upload fabricated/empty coverage or require a new service check
+before its actual context is qualified. The six-context ruleset proposal remains
+unchanged.
 
 ## CodeQL configuration
 
@@ -168,10 +184,14 @@ with `upload: never` and `upload-database: false` to avoid competing native
 code-scanning uploads. Its zero-findings gate and artifact retention complement
 rather than replace GitHub-managed default setup. CI success is not equivalent
 to publishing native security alerts.
-GitHub [automatically adds supported languages](https://docs.github.com/en/code-security/concepts/code-scanning/setup-types)
-when source changes, with fallback if the new configuration fails. Verify a
-successful Python analysis after the verifier reaches main; do not infer it from
-the earlier Actions-only success or add an unobserved check to the ruleset.
+Native Python adoption and processing are now **verified on main
+`dbfe80897a0616babeaa41341b54ffcbea79c867`**. The
+[GitHub-managed Python job](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43641749723/job/132590628000)
+scanned all six Python files, uploaded the results and confirmed that analysis
+upload processing completed. The same run's Actions analysis succeeded too.
+This evidence is independent of the standalone SARIF gates and supersedes the
+earlier Actions-only observation. It does not certify future heads or change
+the required-check proposal; recheck native analyses when source or setup changes.
 
 ## References
 
