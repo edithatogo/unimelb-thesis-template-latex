@@ -7,29 +7,51 @@ CODEOWNERS or team approval is mandatory.
 
 ## Build and validate
 
-Install a full TeX distribution providing `latexmk`, LuaLaTeX and `biber`, plus
-GNU Make, `qpdf`, and Poppler's `pdfinfo` and `pdftotext`. The hosted LaTeX workflow
-is the reference for its TeX Live version; record your local version when it
-differs. Optional `chktex` and `latexindent` tools do not replace the build gate.
+Install Python 3.10 or newer, GNU Make, a full TeX distribution providing
+`latexmk`, LuaLaTeX, `biber` and `makeglossaries`, plus `qpdf` and Poppler's
+`pdfinfo` and `pdftotext`. The hosted LaTeX workflow pins its TeX container by
+digest; record your local toolchain when it differs. Optional `chktex` and
+`latexindent` tools do not replace the build gate.
 
 From the repository root, run:
 
 ```sh
-make verify
+make test    # Verifier regression tests; no TeX installation required
+make verify  # Tests, fresh compilation, and output validation
+make replay  # Tests and two fresh builds; compare text and page count
 ```
 
-The command forces a new LuaLaTeX build with shell escape disabled and validates
-`example/out/Thesis.pdf`: a nonempty file, structural validity, readable metadata,
-and nonblank extracted text. A compilation error, missing tool or failed PDF
-check must produce a failing exit status. Use `make build` for compilation alone
-and `make clean` to remove generated build files. Keep generated PDFs and
-auxiliary files out of the PR unless the requested change explicitly concerns
-a published example artifact.
+Verification builds in a fresh temporary directory with shell escape disabled.
+It retains the validated PDF, selected logs and JSON report in
+`build/verification/`; replay also retains evidence in `build/replay/`.
+Compilation errors, PDF-tool diagnostics, missing sections, unresolved references
+and incomplete bibliography/glossary output fail the command. Temporary build
+files are cleaned automatically. Keep generated PDFs and auxiliary files out of
+the PR unless the requested change explicitly concerns a published example.
 
-Open the newly generated PDF and check the title and front matter, contents,
+Open `build/verification/Thesis.pdf` and check the title and front matter, contents,
 chapter headings, representative mathematics/tables, bibliography and appendix.
 Automated PDF checks do not establish visual quality or current university
 policy compliance. Document any relevant visual limitation.
+
+## Verifier coverage
+
+Coverage is an optional local tooling step and a CI gate for the Python verifier.
+Using Python 3.11 or newer, install the hash-pinned development dependency in a
+virtual environment:
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install --require-hashes -r requirements-dev.txt
+make coverage
+```
+
+This runs the tests under coverage.py 7.17.3, measures statements and branches,
+requires at least 80% branch-aware total coverage, and writes
+`build/coverage/coverage.xml`. It does not measure TeX output correctness or upload
+to Codecov. Report the actual result; no measured percentage is implied by the
+configured floor. See [quality checks](docs/quality-checks.md) for the gates.
 
 ## Pull-request evidence
 
@@ -41,10 +63,10 @@ the PR or integrating a new base. A queued, skipped or unrelated successful run
 is not evidence that the current change passed.
 
 Keep source changes separate from opt-in formatting. Update documentation when
-build commands, outputs or requirements change. Do not add coverage badges or
-upload empty coverage for this typesetting template. Reassess coverage if an
-executable test suite is introduced, as described in
-[repository controls](docs/repository-controls.md).
+build commands, outputs or requirements change. Use real verifier coverage
+reports; do not add an external-service badge or claim successful Codecov upload
+without verifying that integration. See
+[repository controls](docs/repository-controls.md) for its current status.
 
 ## Dependencies, security and releases
 

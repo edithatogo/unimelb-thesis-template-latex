@@ -19,9 +19,12 @@ link here rather than maintain conflicting instructions or stale task state.
 ## Validation and evidence
 
 Run `make verify` **from the repository root** before proposing a change. It
-rebuilds `example/Thesis.tex` using LuaLaTeX with shell escape disabled and checks
-the generated `example/out/Thesis.pdf` with qpdf and Poppler. The required tools
-and the PDF inspection checklist are in [CONTRIBUTING.md](CONTRIBUTING.md).
+runs the verifier tests, builds `example/Thesis.tex` in a fresh temporary directory
+using LuaLaTeX with shell escape disabled, and validates the PDF and reference
+material. The retained PDF is `build/verification/Thesis.pdf`. Use `make test`
+for the fast suite and `make replay` for two clean builds. The required tools,
+optional `make coverage` setup, and PDF inspection checklist are in
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 Compilation and PDF validation must fail closed. Do not ignore a failed command,
 replace a missing tool with a successful no-op, or reuse a tracked demonstration
@@ -44,6 +47,10 @@ Formatting is opt-in and must not silently rewrite source during verification.
 - Follow [repository controls](docs/repository-controls.md) for the intended
   ruleset, stable check names, bot inventory and owner recovery. A committed
   ruleset file is a proposal until GitHub settings are applied and read back.
+- Preserve the existing GitHub-managed CodeQL default setup. Do not add a
+  competing advanced workflow; verify Python analysis after the verifier reaches
+  main. Coverage applies to the Python verifier, not TeX source; a local XML report
+  does not establish Codecov service integration.
 - Update a dated drift receipt when settings or gate names change. Preserve
   unresolved blockers explicitly; do not close an issue on configuration intent
   alone. Offline security drafts remain unmerged until their stated provisioning

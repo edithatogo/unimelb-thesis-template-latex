@@ -8,6 +8,9 @@ requires automated merge gates that one maintainer can operate.
 configuration. **Committing this file does not activate a GitHub ruleset.**
 The [dated drift receipt](evidence/issue-8-2026-11-15.md) records actual settings,
 source dependencies, successful check evidence and unresolved blockers.
+The [issue #9 integration receipt](evidence/issue-9-integration-2026-11-15.md)
+reconciles the later verifier, coverage and CodeQL changes without rewriting that
+historical baseline.
 
 | Control | Desired behavior |
 | --- | --- |
@@ -119,15 +122,30 @@ and merged PR #11. `renovate.json` inherits `github>edithatogo/renovate-config` 
 enables the dashboard. No Dependabot config existed at the audited baseline.
 Verify actual replacement updates before removing an existing update service.
 
-Codecov is **not applicable to the inspected typesetting-only baseline**, which
-has no instrumented executable test suite. PDF validation does not produce source
-line coverage. Do not upload empty/fabricated coverage or require a nonexistent
-coverage check. Reassess when executable tooling/tests arrive through
-[issue #7](https://github.com/edithatogo/unimelb-thesis-template-latex/issues/7),
-[issue #9](https://github.com/edithatogo/unimelb-thesis-template-latex/issues/9)
-or other work: identify meaningful coverage that can be collected, or record a
-specific evidence-backed exclusion. Do not carry forward the no-tests rationale
-without checking the delivered source.
+The original typesetting-only baseline had no executable coverage suite. PR #15
+adds a Python verifier, so that exclusion no longer applies to the delivered
+tooling. `make coverage` now instruments verifier statements and branches using
+hash-pinned coverage.py, with an 80% branch-aware total floor and an XML artifact.
+See [the setup and scope](../CONTRIBUTING.md#verifier-coverage). Measured local and
+hosted results belong to the checked commit; the configured threshold is not a
+passing result. TeX output quality still needs compilation and PDF inspection.
+
+External Codecov onboarding and upload remain **unconfigured**. A retained XML
+report is not evidence that Codecov ingested it. Do not upload fabricated/empty
+coverage, add an unverified badge, or require a nonexistent service check.
+Record any later service activation and its successful ingestion separately.
+
+## CodeQL configuration
+
+Keep the already successful GitHub-managed default setup. Its Actions analysis
+passed in [run 43604179317](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43604179317)
+on the audited main. The competing advanced workflow from PR #15 is removed
+during integration because [default setup disables advanced workflows and blocks
+their uploads](https://docs.github.com/en/code-security/reference/code-scanning/troubleshoot-analysis-errors/two-codeql-workflows).
+GitHub [automatically adds supported languages](https://docs.github.com/en/code-security/concepts/code-scanning/setup-types)
+when source changes, with fallback if the new configuration fails. Verify a
+successful Python analysis after the verifier reaches main; do not infer it from
+the earlier Actions-only success or add an unobserved check to the ruleset.
 
 ## References
 

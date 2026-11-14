@@ -19,10 +19,15 @@ make verify  # Tests, clean thesis compilation, and output validation
 make replay  # Tests and two clean builds; compare extracted document text
 ```
 
+Optional local `make coverage` uses hash-pinned coverage.py 7.17.3 and Python
+3.11+; installation is described in [CONTRIBUTING.md](../CONTRIBUTING.md).
+The ordinary verifier and test commands retain their Python 3.10+ requirement.
+
 `make verify` compiles the example into a new temporary directory. Neither the
 tracked example PDFs nor a previous successful build can satisfy the check.
-It fails on a compiler or tool error, missing or empty required output, invalid
-PDF structure, zero pages, blank extracted text, missing required sections,
+It fails on a compiler or tool error, PDF-tool diagnostics, missing or empty
+required output, invalid PDF structure, zero pages, blank extracted text,
+missing required sections or rendered example content,
 unresolved references or citations, or incomplete bibliography/glossary
 processing. Build and PDF-tool subprocesses have finite timeouts. Non-fatal
 typographic warnings remain visible in the retained log; these are not silently
@@ -40,7 +45,8 @@ the whole compiler process group, not only the latexmk parent.
 | --- | --- | --- | --- |
 | `compile / build` | Every PR, main push, merge group, manual; weekly replay | 20-minute job; 300 seconds per compile; 30 seconds per PDF command; zero hard validation failures | Validated PDF and verification logs/JSON, retained 14 days |
 | `Actionlint` | Every PR, main push, manual | 5 minutes; zero workflow/ShellCheck errors | Actionlint output in the job log |
-| `Analyze (actions)` and `Analyze (python)` | Every PR, main push, manual, weekly | 15 minutes per language; security-extended analysis | GitHub code-scanning results |
+| `Python verifier coverage` | PR/main coverage workflow | Statement/branch instrumentation; branch-aware total at least 80% | Actual report and `build/coverage/coverage.xml`; no Codecov upload |
+| CodeQL default setup | GitHub-managed eligible pushes/PRs and schedule | GitHub-managed analysis; Actions success observed, Python adoption pending after main integration | GitHub code-scanning results for the actual commit |
 | `Dependency review` | Every PR | 5 minutes; newly introduced known vulnerabilities at low severity or above fail | Dependency review job summary |
 | Privacy and secrets | Existing PR/main/merge-group/manual/weekly triggers | Existing 30-minute limit and Gitleaks/Presidio policy | Existing privacy job output; raw findings are not uploaded |
 | Release verification | Version tags only | The same verification workflow and thresholds as PRs | The exact verified PDF is downloaded by the publication job |
@@ -61,12 +67,13 @@ commit and run, not to a permanent release certification.
 ## Security and update decisions
 
 Workflows default to `contents: read`. Checkouts do not persist credentials.
-CodeQL alone receives `security-events: write`. The publication job alone
+Security-result upload permission belongs only to the relevant analysis job.
+The publication job alone
 receives `contents: write`; it does not check out or execute repository source.
 Normal pushes cannot publish. PR/main runs cancel obsolete work; releases
 serialize by tag without cancelling a publication already in progress.
 
-External actions are pinned to full commit SHAs. The local reusable workflow is
+Repository-defined external actions are pinned to full commit SHAs. The local reusable workflow is
 resolved from the caller's commit. The TeX container is pinned to its registry
 digest; this avoids the upstream action's mapping of the current year to a
 moving `latest` image. qpdf/Poppler are installed from the container's Debian
@@ -74,6 +81,16 @@ repositories, so the entire toolchain is not claimed to be hermetic.
 Actionlint's release archive is verified against a committed SHA-256 before
 execution. Update its version and checksum together after checking the official
 release. Review container digest changes with a replay run.
+
+GitHub-managed CodeQL default setup is retained. Its Actions analysis passed in
+[run 43604179317](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43604179317)
+on `d5f50731a038cd555ce04c2e158c3589a033473a`. A competing advanced workflow is
+removed during integration: [default setup disables advanced workflows and
+blocks their uploads](https://docs.github.com/en/code-security/reference/code-scanning/troubleshoot-analysis-errors/two-codeql-workflows).
+[New supported languages are detected automatically](https://docs.github.com/en/code-security/concepts/code-scanning/setup-types),
+but a failed new configuration falls back to the preceding configuration.
+Consequently Python scanning needs successful post-integration evidence; the
+earlier Actions-only run cannot satisfy that acceptance item.
 
 Renovate already extends `github>edithatogo/renovate-config` and is active:
 [PR #11](https://github.com/edithatogo/unimelb-thesis-template-latex/pull/11)
@@ -92,10 +109,10 @@ dependency graph; a passing review is not a comprehensive vulnerability audit.
 
 | Technique or setting | Applicability decision |
 | --- | --- |
-| CodeQL for TeX/Perl | These languages are not supported. CodeQL **is** enabled for the supported GitHub Actions workflows and Python verifier; see the [official language table](https://codeql.github.com/docs/codeql-overview/supported-languages-and-frameworks/). |
+| CodeQL for TeX/Perl | These languages are not supported. Actions and Python are supported; existing default setup has demonstrated Actions analysis, while Python adoption remains to be verified. See the [official language table](https://codeql.github.com/docs/codeql-overview/supported-languages-and-frameworks/). |
 | Duplicate Dependabot version-update configuration | Excluded while the existing Renovate integration is active. |
 | Property/fuzz, broad mutation, distributed simulation, load and browser suites | No corresponding product runtime, concurrency model, API or browser interface exists. Bounded failure-oriented verifier tests and actual thesis compilation cover the demonstrated risks. Reassess if the repository gains such runtime code. |
-| TeX line-coverage percentage | Not a meaningful correctness threshold for document output. The Python verifier now has executable tests; any coverage service must use a real verifier coverage report, not an empty or fabricated upload. Service onboarding belongs to #8. |
+| TeX line-coverage percentage | Not a meaningful correctness threshold for document output. The Python verifier has real statement/branch coverage through `make coverage`; its 80% floor is a configured gate, not an asserted result. External Codecov onboarding/upload is unconfigured and is not implied by the XML artifact. |
 | Pixel-perfect or byte-identical PDF snapshots | Font, TeX and PDF metadata differences make them unsuitable as an unqualified cross-platform gate. Inspect the retained PDF when changing layout; replay compares extracted text in one toolchain. |
 | Required human approvals, CODEOWNERS or team gates | Prohibited by this repository's solo-maintainer instructions. Automated checks provide the proposed gate names. |
 | Repository rulesets, bot permissions, context/PR templates | Owned by [#8](https://github.com/edithatogo/unimelb-thesis-template-latex/issues/8). This issue supplies stable automated check names and a real `make verify` command without changing settings. |
