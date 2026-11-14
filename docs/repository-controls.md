@@ -54,8 +54,8 @@ is PR-only, which is compatible with this policy because no merge queue is used.
 
 Renovate is the active update bot. CodeRabbit and the Codex connector have
 historical review comments, but neither is a required gate or bypass actor.
-The managed `Analyze (actions)`/`CodeQL` results, the new `Python verifier coverage`
-job and unconfigured Codecov service are not added to this required-check proposal.
+The managed `Analyze (actions)`/`CodeQL` results, `Python verifier coverage`,
+`Codecov upload` and Codecov service checks are not added to this required-check proposal.
 Qualify any additional context on the combined source before requiring it. The
 tag-only release and unprovisioned offline-security draft
 [PR #13](https://github.com/edithatogo/unimelb-thesis-template-latex/pull/13)
@@ -145,10 +145,18 @@ See [the setup and scope](../CONTRIBUTING.md#verifier-coverage). Measured local 
 hosted results belong to the checked commit; the configured threshold is not a
 passing result. TeX output quality still needs compilation and PDF inspection.
 
-External Codecov onboarding and upload remain **unconfigured**. A retained XML
-report is not evidence that Codecov ingested it. Do not upload fabricated/empty
-coverage, add an unverified badge, or require a nonexistent service check.
-Record any later service activation and its successful ingestion separately.
+The coverage workflow configures a separate `Codecov upload` job after the local
+coverage gate succeeds. It downloads the same run's XML artifact and sends only
+that coverage report using [OIDC authentication](https://github.com/codecov/codecov-action#using-oidc).
+Only this job receives `id-token: write`; repository contents remain read-only.
+No stored upload token or owner-wide tokenless setting change is required.
+
+Codecov onboarding and successful ingestion remain **pending verification**.
+The [Codecov GitHub App needs access to this repository](https://docs.codecov.com/docs/quick-start).
+A retained XML or successful upload step alone does not prove report processing:
+record the exact commit, workflow run and populated Codecov report before
+claiming activation. Do not upload fabricated/empty coverage, add an unverified
+badge, or require a service check before its actual context is qualified.
 
 ## CodeQL configuration
 
