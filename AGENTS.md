@@ -8,8 +8,8 @@ link here rather than maintain conflicting instructions or stale task state.
 
 - `template/` contains the class and supporting styles; `example/` contains the
   example thesis; `.latexmkrc` and `Makefile` define the local build.
-- `scripts/` contains the clean-build verifier and standalone CodeQL results
-  gate; `tests/` contains their regression tests.
+- `scripts/` contains the base thesis and scientific authoring verifiers and
+  standalone CodeQL results gate; `tests/` contains their regression tests.
 - Check the current default branch, open PRs and the working tree before editing.
   Preserve uncommitted work and use an isolated branch when another task is active.
 - Keep changes focused on the requested issue. Reuse an existing implementation

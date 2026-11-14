@@ -39,7 +39,8 @@ policy compliance. Document any relevant visual limitation.
 ## Verifier coverage
 
 Coverage is an optional local tooling step and a CI gate for the Python helpers
-in `scripts/`, including the build verifier and CodeQL results gate.
+in `scripts/`: the base thesis and scientific authoring verifiers and CodeQL
+results gate.
 Using Python 3.11 or newer, install the hash-pinned development dependency in a
 virtual environment:
 
