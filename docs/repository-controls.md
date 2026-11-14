@@ -139,9 +139,12 @@ Record any later service activation and its successful ingestion separately.
 
 Keep the already successful GitHub-managed default setup. Its Actions analysis
 passed in [run 43604179317](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43604179317)
-on the audited main. The competing advanced workflow from PR #15 is removed
-during integration because [default setup disables advanced workflows and blocks
-their uploads](https://docs.github.com/en/code-security/reference/code-scanning/troubleshoot-analysis-errors/two-codeql-workflows).
+on the audited main. PR #15 subsequently merged an additional SHA-pinned
+CodeQL CI workflow. Retain it: Actions/Python analyses generate standalone SARIF,
+with `upload: never` and `upload-database: false` to avoid competing native
+code-scanning uploads. Its zero-findings gate and artifact retention complement
+rather than replace GitHub-managed default setup. CI success is not equivalent
+to publishing native security alerts.
 GitHub [automatically adds supported languages](https://docs.github.com/en/code-security/concepts/code-scanning/setup-types)
 when source changes, with fallback if the new configuration fails. Verify a
 successful Python analysis after the verifier reaches main; do not infer it from

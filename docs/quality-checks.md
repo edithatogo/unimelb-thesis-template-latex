@@ -46,7 +46,8 @@ the whole compiler process group, not only the latexmk parent.
 | `compile / build` | Every PR, main push, merge group, manual; weekly replay | 20-minute job; 300 seconds per compile; 30 seconds per PDF command; zero hard validation failures | Validated PDF and verification logs/JSON, retained 14 days |
 | `Actionlint` | Every PR, main push, manual | 5 minutes; zero workflow/ShellCheck errors | Actionlint output in the job log |
 | `Python verifier coverage` | PR/main coverage workflow | Statement/branch instrumentation; branch-aware total at least 80% | Actual report and `build/coverage/coverage.xml`; no Codecov upload |
-| CodeQL default setup | GitHub-managed eligible pushes/PRs and schedule | GitHub-managed analysis; Actions success observed, Python adoption pending after main integration | GitHub code-scanning results for the actual commit |
+| CodeQL default setup | GitHub-managed eligible pushes/PRs and schedule | GitHub-managed native analysis; independently confirm Python adoption | GitHub code-scanning results for the actual commit |
+| CodeQL CI standalone | PR/main push/schedule/manual | Actions and Python, complete SARIF and zero findings; uploads disabled to avoid default-setup conflict | Workflow status and retained SARIF artifacts |
 | `Dependency review` | Every PR | 5 minutes; newly introduced known vulnerabilities at low severity or above fail | Dependency review job summary |
 | Privacy and secrets | Existing PR/main/merge-group/manual/weekly triggers | Existing 30-minute limit and Gitleaks/Presidio policy | Existing privacy job output; raw findings are not uploaded |
 | Release verification | Version tags only | The same verification workflow and thresholds as PRs | The exact verified PDF is downloaded by the publication job |
@@ -84,9 +85,12 @@ release. Review container digest changes with a replay run.
 
 GitHub-managed CodeQL default setup is retained. Its Actions analysis passed in
 [run 43604179317](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43604179317)
-on `d5f50731a038cd555ce04c2e158c3589a033473a`. A competing advanced workflow is
-removed during integration: [default setup disables advanced workflows and
-blocks their uploads](https://docs.github.com/en/code-security/reference/code-scanning/troubleshoot-analysis-errors/two-codeql-workflows).
+on `d5f50731a038cd555ce04c2e158c3589a033473a`. Since that audit,
+PR #15 merged a separate SHA-pinned CodeQL CI for Actions and Python into main.
+It uses `upload: never`, `upload-database: false`, and a local complete-SARIF,
+zero-findings gate, retaining artifacts without attempting a competing native
+code-scanning upload. Keep the GitHub-managed default setup unchanged; do not
+mistake standalone CI evidence for native GitHub security alerts.
 [New supported languages are detected automatically](https://docs.github.com/en/code-security/concepts/code-scanning/setup-types),
 but a failed new configuration falls back to the preceding configuration.
 Consequently Python scanning needs successful post-integration evidence; the

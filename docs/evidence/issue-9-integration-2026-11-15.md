@@ -63,3 +63,14 @@ scanning; apply/read back the
 ruleset and observe its checks on an ordinary PR. Keep #8 and #9 open while
 settings or acceptance remain unverified. See [repository controls](../repository-controls.md)
 and [quality checks](../quality-checks.md) for the authoritative procedures.
+
+## Conflict reconciliation after PR #15 merged
+
+`main` advanced to `805d7accbeb953aa121ba1d00d30055e8ff939e3` through
+PR #15 while this integration branch remained based on `d5f50731a038cd555ce04c2e158c3589a033473a`.
+The merge retains the newer main-only CodeQL workflow, standalone SARIF
+validator and its 17 tests, alongside this branch's strict PDF diagnostics,
+rendered-content assertions and coverage suite. The CodeQL workflow deliberately
+disables native uploading, leaving GitHub-managed default setup unchanged.
+These combined changes require fresh exact-head CI; earlier green checks on
+separate parents do not establish that integration is green.
