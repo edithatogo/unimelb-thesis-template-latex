@@ -23,6 +23,14 @@ Vivamus at pulvinar nisi.
 """
 
 
+GOOD_FONTS = (
+    "name                                 type              encoding         emb sub uni object ID\n"
+    "------------------------------------ ----------------- ---------------- --- --- --- ---------\n"
+    "AAAAAA+Example-Regular               CID Type 0C       Identity-H       yes yes yes     13  0\n"
+    "AAAAAB+Example-Bold                  Type 1            Custom           yes yes no      24  0\n"
+)
+
+
 def write_outputs(directory: Path) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     (directory / "Thesis.pdf").write_bytes(b"%PDF-1.7\nsynthetic test input\n")
@@ -42,6 +50,7 @@ class OutputChecks(unittest.TestCase):
         self.env = {"SOURCE_DATE_EPOCH": verify.DEFAULT_SOURCE_DATE_EPOCH}
         self.pdfinfo = "Title: Synthetic thesis\nPages: 12\n"
         self.text = GOOD_TEXT
+        self.fonts = GOOD_FONTS
         self.commands = []
 
     def fake_command(self, command, **kwargs):
@@ -50,6 +59,8 @@ class OutputChecks(unittest.TestCase):
             return self.pdfinfo
         if command[0] == "pdftotext":
             return self.text
+        if command[0] == "pdffonts":
+            return self.fonts
         return ""
 
     def check(self):
@@ -59,13 +70,31 @@ class OutputChecks(unittest.TestCase):
     def test_complete_output_passes_pdf_tools_and_reports_evidence(self):
         report = self.check()
         self.assertEqual(report["page_count"], 12)
+        self.assertEqual(report["embedded_font_count"], 2)
         self.assertEqual(len(report["normalized_text_sha256"]), 64)
-        self.assertEqual([command[0] for command, _ in self.commands], ["qpdf", "pdfinfo", "pdftotext"])
+        self.assertEqual([command[0] for command, _ in self.commands], ["qpdf", "pdfinfo", "pdffonts", "pdftotext"])
         self.assertTrue(all(options["timeout"] == 30 for _, options in self.commands))
         self.assertEqual(
             [options.get("reject_stderr", False) for _, options in self.commands],
-            [False, True, True],
+            [False, True, True, True],
         )
+
+
+    def test_font_inventory_requires_all_fonts_embedded(self):
+        self.fonts = GOOD_FONTS.replace("yes yes no", "no  no  no ")
+        with self.assertRaisesRegex(verify.VerificationError, "not embedded"):
+            self.check()
+
+    def test_font_inventory_must_not_be_empty_or_malformed(self):
+        for report in (
+            GOOD_FONTS.splitlines()[0] + "\n" + GOOD_FONTS.splitlines()[1],
+            GOOD_FONTS + "malformed\n",
+            "Unexpected output\n",
+        ):
+            with self.subTest(report=report):
+                self.fonts = report
+                with self.assertRaisesRegex(verify.VerificationError, "font"):
+                    self.check()
 
     def test_missing_or_empty_required_outputs_fail(self):
         for filename in ("Thesis.pdf", "Thesis.log", "Thesis.bbl", "Thesis.gls"):
