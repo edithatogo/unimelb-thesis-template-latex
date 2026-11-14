@@ -25,7 +25,7 @@ These committed examples illustrate formatting and structure. They are not proof
 
 * A full LaTeX distribution, such as [TeX Live](https://www.tug.org/texlive/), [MiKTeX](https://miktex.org/), or [MacTeX](https://www.tug.org/mactex/).
 * LuaLaTeX, `latexmk`, `biber`, and `makeglossaries`: For compilation and reference material (usually included with full TeX distributions).
-* Python 3.10 or newer, GNU Make, `qpdf`, and Poppler utilities (`pdfinfo` and `pdftotext`): For running `make verify`.
+* Python 3.10 or newer, GNU Make, `qpdf`, and Poppler utilities (`pdfinfo`, `pdffonts` and `pdftotext`): For running `make verify`.
 * Python 3.11 or newer and the hash-pinned development requirements: Only for the optional local `make coverage` command; see [CONTRIBUTING.md](CONTRIBUTING.md#verifier-coverage).
 * `chktex` (optional): For linting LaTeX code.
 * `latexindent` (optional): For formatting LaTeX code.
