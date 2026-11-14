@@ -9,7 +9,7 @@ This is a modernized version of the University of Melbourne PhD thesis template.
 * Automated Build: Includes a `.latexmkrc` file for automated compilation with `lualatex` and `biber`.
 * Code Quality: Pre-configured for `chktex` (linter) and `latexindent` (formatter).
 * Clear Customization: Well-commented class file (`template/Thesis.cls`) and example files.
-* CI/CD Integration: GitHub Actions for automated compilation, linting, formatting, and releases.
+* CI/CD Integration: GitHub Actions for verified compilation, workflow linting, security checks, and tag-only releases.
 * Latest Guidelines Compliance: Updated to 2025 thesis preparation guidelines, including ORCID support, AI declarations, and no university logo usage.
 
 ## Compiled Example
@@ -20,11 +20,17 @@ A compiled PDF example is available for immediate download:
 * **[example/Thesis-compiled.pdf](example/Thesis-compiled.pdf)** - Same file in the example directory
 
 These files demonstrate the template's output and can be used as references for formatting and structure.
+For output verified against current source, run `make verify` or download the
+`unimelb-thesis-pdf` artifact from a successful [LaTeX CI run](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/workflows/compile-test.yml).
+The checked-in PDFs are reference snapshots.
 
 ## Requirements
 
 * A full LaTeX distribution, such as [TeX Live](https://www.tug.org/texlive/), [MiKTeX](https://miktex.org/), or [MacTeX](https://www.tug.org/mactex/).
 * `biber`: For processing the bibliography (usually included with TeX distributions).
+* `makeglossaries`: For building the glossary (usually included with TeX distributions).
+* GNU Make: For the repository's build and verification commands.
+* Python 3.10 or newer, `qpdf`, and Poppler (`pdfinfo`, `pdftotext`): For verification.
 * `chktex` (optional): For linting LaTeX code.
 * `latexindent` (optional): For formatting LaTeX code.
 
@@ -32,25 +38,28 @@ These files demonstrate the template's output and can be used as references for 
 
 ### Local Compilation
 
-1. Navigate to the `example` directory: `cd example`
-2. Run `latexmk`:
+1. Run commands from the repository root.
+2. Build your thesis:
 
     ```bash
-    latexmk Thesis.tex
+    make build
     ```
 
-    This will compile the document (`Thesis.tex`), run `biber` for the bibliography, and re-compile as needed, producing `Thesis.pdf` in the `example/out/` directory.
-3. To clean up auxiliary files:
+    This forces a LuaLaTeX build of `example/Thesis.tex` with shell escape disabled, runs Biber and makeglossaries as needed, and produces `example/out/Thesis.pdf`. Plain `make` runs the same command.
+3. Before contributing a change, verify the supplied example:
 
     ```bash
-    latexmk -c
+    make verify
     ```
 
-    And to clean up all generated files (including PDF):
+    This runs the regression tests, compiles into a fresh temporary directory, and checks the final log, PDF, expected sections, bibliography and glossary. Inspect `build/verification/Thesis.pdf`; the same directory contains its log and JSON report. The verifier expects the supplied example's title and sections, so use `make build` for a thesis with different content. See [Testing and CI applicability](docs/quality-checks.md) for `make test`, `make replay`, limits and retained evidence.
+4. To remove the authoring build's generated files, including its PDF:
 
     ```bash
-    latexmk -C
+    make clean
     ```
+
+    Verification evidence under `build/` remains available for inspection.
 
 ### Usage with Overleaf
 
@@ -110,9 +119,9 @@ Advanced customization can be done in `template/Thesis.cls`:
 ## Troubleshooting
 
 * **Compilation Errors:**
-  * Check the LaTeX log file (`example/out/Thesis.log`) for detailed error messages.
+  * For `make build`, check `example/out/Thesis.log`. For `make verify`, check `build/verification/Thesis.log` and `report.json`; failures before TeX creates a log are recorded in the report.
   * Ensure all necessary packages are installed.
-  * If using `latexmk`, it typically handles multiple runs. If compiling manually, you might need: `lualatex Thesis.tex` -> `biber Thesis` -> `lualatex Thesis.tex` -> `lualatex Thesis.tex`.
+  * Use the repository-root build commands so latexmk can handle repeated LaTeX passes, Biber, the glossary and the template search path.
 * **Fonts Not Found:** If you've changed fonts via `fontspec`, ensure they are correctly named and installed on your system (or supported by Overleaf).
 * **Bibliography Issues:**
   * Ensure `biber` is run correctly (automated by `latexmk`).

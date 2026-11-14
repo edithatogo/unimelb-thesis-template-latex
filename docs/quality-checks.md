@@ -14,10 +14,18 @@ GNU Make, qpdf and Poppler (`pdfinfo`, `pdftotext`). Python validation uses only
 the standard library.
 
 ```sh
+make build   # Authoring build; PDF in example/out/
 make test    # Fast verifier regression tests; no TeX installation required
 make verify  # Tests, clean thesis compilation, and output validation
 make replay  # Tests and two clean builds; compare extracted document text
+make clean   # Remove authoring outputs from example/out/
 ```
+
+Plain `make` runs `make build`. The authoring commands preserve the interface
+introduced by [PR #12](https://github.com/edithatogo/unimelb-thesis-template-latex/pull/12).
+`make clean` leaves verification evidence under `build/` available for inspection.
+The verifier checks the supplied example's expected title and sections; use
+`make build` while writing a thesis with different content.
 
 `make verify` compiles the example into a new temporary directory. Neither the
 tracked example PDFs nor a previous successful build can satisfy the check.
@@ -40,7 +48,7 @@ the whole compiler process group, not only the latexmk parent.
 | --- | --- | --- | --- |
 | `compile / build` | Every PR, main push, merge group, manual; weekly replay | 20-minute job; 300 seconds per compile; 30 seconds per PDF command; zero hard validation failures | Validated PDF and verification logs/JSON, retained 14 days |
 | `Actionlint` | Every PR, main push, manual | 5 minutes; zero workflow/ShellCheck errors | Actionlint output in the job log |
-| `Analyze (actions)` and `Analyze (python)` | Every PR, main push, manual, weekly | 15 minutes per language; security-extended analysis | GitHub code-scanning results |
+| `Analyze (actions)` and `Analyze (python)` | Every PR, main push, manual, weekly | 15 minutes per language; security-extended analysis; zero findings; valid SARIF required | SARIF reports retained as CI artifacts for 14 days |
 | `Dependency review` | Every PR | 5 minutes; newly introduced known vulnerabilities at low severity or above fail | Dependency review job summary |
 | Privacy and secrets | Existing PR/main/merge-group/manual/weekly triggers | Existing 30-minute limit and Gitleaks/Presidio policy | Existing privacy job output; raw findings are not uploaded |
 | Release verification | Version tags only | The same verification workflow and thresholds as PRs | The exact verified PDF is downloaded by the publication job |
@@ -60,9 +68,31 @@ commit and run, not to a permanent release certification.
 
 ## Security and update decisions
 
+### CodeQL results and repository setup
+
+The first [hosted CodeQL run](https://github.com/edithatogo/unimelb-thesis-template-latex/actions/runs/43605249766)
+completed both analyses but GitHub rejected their uploads because this repository
+already has CodeQL default setup enabled. GitHub
+[does not accept advanced CodeQL uploads while default setup is enabled](https://docs.github.com/en/code-security/reference/code-scanning/sarif-files/troubleshoot-sarif-uploads/default-setup-enabled).
+The workflow therefore runs both analyses in the action's non-upload mode and
+uses `scripts/check_codeql.py` as an explicit findings gate. Analysis errors,
+missing or invalid SARIF, unsuccessful analysis metadata and any reported finding
+fail the job. Successful query execution alone is insufficient. Reports are
+retained for inspection, including when the findings gate fails.
+Each report is limited to 20 MiB. The checker validates the completion and
+results fields needed for this gate, rather than the entire SARIF schema.
+
+These reports are CI artifacts, not native GitHub Security alerts. Existing
+default setup remains unchanged. Its enabled state alone does not establish
+which languages it currently scans or whether those analyses have succeeded;
+confirming that configuration and choosing a single native-alert source remain
+repository-settings work under [#8](https://github.com/edithatogo/unimelb-thesis-template-latex/issues/8).
+
+### Permissions and updates
+
 Workflows default to `contents: read`. Checkouts do not persist credentials.
-CodeQL alone receives `security-events: write`. The publication job alone
-receives `contents: write`; it does not check out or execute repository source.
+The CodeQL CI gate does not need to write security events. The publication job
+alone receives `contents: write`; it does not check out or execute repository source.
 Normal pushes cannot publish. PR/main runs cancel obsolete work; releases
 serialize by tag without cancelling a publication already in progress.
 
@@ -92,7 +122,7 @@ dependency graph; a passing review is not a comprehensive vulnerability audit.
 
 | Technique or setting | Applicability decision |
 | --- | --- |
-| CodeQL for TeX/Perl | These languages are not supported. CodeQL **is** enabled for the supported GitHub Actions workflows and Python verifier; see the [official language table](https://codeql.github.com/docs/codeql-overview/supported-languages-and-frameworks/). |
+| CodeQL for TeX/Perl | These languages are not supported. The CI workflow analyzes the supported GitHub Actions workflows and Python verifier and fails on findings; see the [official language table](https://codeql.github.com/docs/codeql-overview/supported-languages-and-frameworks/). Native-alert setup is described above. |
 | Duplicate Dependabot version-update configuration | Excluded while the existing Renovate integration is active. |
 | Property/fuzz, broad mutation, distributed simulation, load and browser suites | No corresponding product runtime, concurrency model, API or browser interface exists. Bounded failure-oriented verifier tests and actual thesis compilation cover the demonstrated risks. Reassess if the repository gains such runtime code. |
 | TeX line-coverage percentage | Not a meaningful correctness threshold for document output. The Python verifier now has executable tests; any coverage service must use a real verifier coverage report, not an empty or fabricated upload. Service onboarding belongs to #8. |
