@@ -1,14 +1,12 @@
-.PHONY: build verify clean
+PYTHON ?= python3
 
-build:
-	latexmk -g -lualatex -file-line-error -halt-on-error -interaction=nonstopmode -no-shell-escape example/Thesis.tex
+.PHONY: test verify replay
 
-verify: build
-	test -s example/out/Thesis.pdf
-	qpdf --check example/out/Thesis.pdf
-	pdfinfo example/out/Thesis.pdf
-	pdftotext example/out/Thesis.pdf example/out/Thesis.txt
-	grep -q '[^[:space:]]' example/out/Thesis.txt
+test:
+	$(PYTHON) -m unittest discover -s tests -v
 
-clean:
-	latexmk -C example/Thesis.tex
+verify: test
+	$(PYTHON) scripts/verify.py
+
+replay: test
+	$(PYTHON) scripts/verify.py --replay
