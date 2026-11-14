@@ -52,9 +52,14 @@ make coverage
 
 This runs the tests under coverage.py 7.17.3, measures statements and branches,
 requires at least 80% branch-aware total coverage, and writes
-`build/coverage/coverage.xml`. It does not measure TeX output correctness or upload
-to Codecov. Report the actual result; no measured percentage is implied by the
+`build/coverage/coverage.xml`. This local command does not measure TeX output
+correctness or upload to Codecov. Report the actual result; no percentage is implied by the
 configured floor. See [quality checks](docs/quality-checks.md) for the gates.
+
+CI retains this XML and configures a separate `Codecov upload` job to send the
+same run's artifact using OIDC, without a stored upload token. Service onboarding
+and processing of the exact commit's report must be verified before claiming
+successful integration; see [repository controls](docs/repository-controls.md#dependency-updates-and-coverage).
 
 ## Pull-request evidence
 
