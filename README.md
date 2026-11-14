@@ -6,6 +6,7 @@ This is a modernized version of the University of Melbourne PhD thesis template.
 
 * Modern Packages: Utilizes `biblatex` for bibliography, `fontspec` for Unicode fonts, `geometry` for page layout, `hyperref` for PDF features, `microtype` for typography, and more.
 * Structured Example: A comprehensive `example/` directory showcasing common thesis elements like figures, tables, equations, and code listings.
+* Optional Scientific Authoring: A separate [scientific extension](docs/scientific-authoring.md) provides advanced mathematics, algorithms, PGFPlots, flexible tables and structured summaries, with its own synthetic rendered-output validation.
 * Automated Build: Includes a `.latexmkrc` file for automated compilation with `lualatex` and `biber`.
 * Verification: Clean builds check PDF structure, rendered content, bibliography, glossary and cross-references; behavioral tests exercise the verifier.
 * Clear Customization: Well-commented class file (`template/Thesis.cls`) and example files.
@@ -43,6 +44,8 @@ These committed examples illustrate formatting and structure. They are not proof
 
     This runs verifier tests, compiles `example/Thesis.tex` in a fresh temporary directory with shell escape disabled, and validates the PDF and reference material. The retained PDF is `build/verification/Thesis.pdf`, with selected diagnostics and `report.json` alongside it. Compilation or validation errors fail the command. Temporary build files are cleaned automatically.
 3. Run `make test` for the fast verifier suite without TeX. Run `make replay` for two fresh builds that must produce the same normalized text and page count in the same toolchain; replay evidence is retained in `build/replay/`.
+
+For the optional scientific-authoring fixture, run `make science-check` (Python tests plus a fresh LuaLaTeX build and PDF checks). The base verifier remains unchanged.
 
 The output assertions describe this repository's example. Update them deliberately when adapting the example to a different thesis. They do not replace visual review or institutional requirements. See [quality checks](docs/quality-checks.md) for verification and coverage limits.
 
