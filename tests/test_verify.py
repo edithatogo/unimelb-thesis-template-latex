@@ -1,6 +1,7 @@
 """Behavioral checks for verification failures, using synthetic compiler/PDF output."""
 
 import json
+import hashlib
 import os
 from pathlib import Path
 import signal
@@ -15,12 +16,20 @@ from scripts import verify
 
 
 GOOD_LOG = "This is LuaHBTeX.\nOutput written on Thesis.pdf (12 pages, 2048 bytes).\n"
-GOOD_TEXT = "\n".join(verify.REQUIRED_SECTIONS) + """
-A synthetic thesis example.
-The TeXbook
-A document preparation system
-Vivamus at pulvinar nisi.
-"""
+GOOD_INFO = "Title: A Modernised Thesis Template\nAuthor: Example Author\nPages: 12\n"
+# Independent synthetic page extracts; do not derive expected metadata from the verifier.
+GOOD_TEXT = "\f".join((
+    "A Modernised Thesis Template\nby Example Author\nDoctor of Philosophy\nJanuary 2025\nDepartment of Modernisation\nSchool of Advanced Templates",
+    "Abstract\nA Modernised Thesis Template\nby Example Author\nA synthetic abstract.",
+    "Declaration of Authorship\nExample Author confirms the work titled A Modernised Thesis Template.",
+    "Preface\nSynthetic preface.",
+    "Contents\nIntroduction 1\nBibliography 5\nAn Appendix 6",
+    "Glossary\nA document preparation system",
+    "Introduction\nSynthetic chapter body.",
+    "Bibliography\nThe TeXbook",
+    "Appendix A\nAn Appendix\nVivamus at pulvinar nisi.",
+)) + "\f"
+
 
 
 GOOD_FONTS = (
@@ -48,7 +57,7 @@ class OutputChecks(unittest.TestCase):
         self.output = self.root / "outputs"
         write_outputs(self.output)
         self.env = {"SOURCE_DATE_EPOCH": verify.DEFAULT_SOURCE_DATE_EPOCH}
-        self.pdfinfo = "Title: Synthetic thesis\nPages: 12\n"
+        self.pdfinfo = GOOD_INFO
         self.text = GOOD_TEXT
         self.fonts = GOOD_FONTS
         self.commands = []
@@ -95,6 +104,19 @@ class OutputChecks(unittest.TestCase):
                 self.fonts = report
                 with self.assertRaisesRegex(verify.VerificationError, "font"):
                     self.check()
+
+    def test_receipt_contains_observed_document_page_positions(self):
+        self.assertEqual(self.check()["document_semantics"], {
+            "title_page": 1, "abstract_page": 2, "declaration_page": 3,
+            "bibliography_page": 8, "appendix_page": 9,
+        })
+
+    def test_output_gate_rejects_wrong_title_page_order(self):
+        pages = GOOD_TEXT.split("\f")
+        pages[0] = pages[0].replace("January 2025\n", "") + "\nJanuary 2025"
+        self.text = "\f".join(pages)
+        with self.assertRaisesRegex(verify.VerificationError, "title page metadata order"):
+            self.check()
 
     def test_missing_or_empty_required_outputs_fail(self):
         for filename in ("Thesis.pdf", "Thesis.log", "Thesis.bbl", "Thesis.gls"):
@@ -298,6 +320,7 @@ class BuildAndReplayChecks(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.builds = []
         self.texts = [GOOD_TEXT, GOOD_TEXT]
+        self.pdf_suffixes = [b"", b""]
         self.command_failure = None
 
     def fake_command(self, command, **kwargs):
@@ -308,9 +331,11 @@ class BuildAndReplayChecks(unittest.TestCase):
             if self.command_failure:
                 raise self.command_failure
             write_outputs(output)
+            pdf = output / "Thesis.pdf"
+            pdf.write_bytes(pdf.read_bytes() + self.pdf_suffixes[len(self.builds) - 1])
             (output / "unrelated-private.txt").write_text("must not be retained", encoding="utf-8")
         elif command[0] == "pdfinfo":
-            return "Pages: 12\n"
+            return GOOD_INFO
         elif command[0] == "pdffonts":
             return GOOD_FONTS
         elif command[0] == "pdftotext":
@@ -332,6 +357,22 @@ class BuildAndReplayChecks(unittest.TestCase):
         self.assertFalse(output.exists())
         self.assertIn("-no-shell-escape", command)
         self.assertEqual(options["timeout"], 300)
+
+    def test_retained_pdf_receipt_matches_final_bytes(self):
+        result = self.run_verification()
+        pdf = self.root / "build" / "verification" / "Thesis.pdf"
+        self.assertEqual(result["pdf_sha256"], hashlib.sha256(pdf.read_bytes()).hexdigest())
+        self.assertEqual(result["pdf_bytes"], pdf.stat().st_size)
+
+    def test_replay_reports_byte_equality_separately_from_semantic_success(self):
+        result = self.run_verification(replay=True)
+        self.assertIs(result["replay"]["pdf_bytes_equal"], True)
+
+    def test_semantically_equal_replay_does_not_claim_different_bytes_are_identical(self):
+        self.pdf_suffixes[1] = b"\n% Different synthetic PDF bytes\n"
+        result = self.run_verification(replay=True)
+        self.assertEqual(result["replay"]["status"], "passed")
+        self.assertIs(result["replay"]["pdf_bytes_equal"], False)
 
     def test_failed_build_cannot_use_old_pdf_and_retains_failure_log(self):
         evidence = self.root / "build" / "verification"

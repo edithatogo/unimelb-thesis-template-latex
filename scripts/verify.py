@@ -15,6 +15,11 @@ import subprocess
 import sys
 import tempfile
 
+if __package__:
+    from .document_semantics import validate_document_semantics
+else:
+    from document_semantics import validate_document_semantics
+
 
 BUILD_TIMEOUT = 300
 PDF_TIMEOUT = 30
@@ -41,6 +46,17 @@ REQUIRED_CONTENT = (
     "A document preparation system",
     "Vivamus at pulvinar nisi.",
 )
+# Expected plain text for this synthetic example, not the shared UMTHESIS schema.
+EXAMPLE_METADATA = {
+    "title": "A Modernised Thesis Template",
+    "author": "Example Author",
+    "degree": "Doctor of Philosophy",
+    "submission_date": "January 2025",
+    "department": "Department of Modernisation",
+    "school": "School of Advanced Templates",
+    "bibliography_content": "The TeXbook",
+    "appendix_content": "Vivamus at pulvinar nisi.",
+}
 HARD_LOG_ERRORS = (
     ("TeX error", r"^!|(?:LaTeX|Package [^\n]+) Error:|Emergency stop|Fatal error|Runaway argument"),
     ("undefined citation or reference", r"(?:Citation|Reference)\b[^\n]*(?:\n[^\n]*)?\bundefined\b|There were undefined (?:references|citations)"),
@@ -198,7 +214,18 @@ def validate_outputs(output_dir: Path, repo_root: Path, env: dict[str, str]) -> 
     missing_content = [content for content in REQUIRED_CONTENT if content not in normalized]
     if missing_content:
         raise VerificationError("PDF is missing expected content: " + ", ".join(missing_content))
+    try:
+        semantics = validate_document_semantics(info, text, EXAMPLE_METADATA)
+    except ValueError as error:
+        raise VerificationError(str(error)) from error
+    digest = hashlib.sha256()
+    with pdf.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
     return {
+        "pdf_sha256": digest.hexdigest(),
+        "pdf_bytes": pdf.stat().st_size,
+        "document_semantics": semantics,
         "page_count": int(pages.group(1)),
         "embedded_font_count": embedded_font_count,
         "normalized_text_characters": len(normalized),
@@ -317,7 +344,10 @@ def verify(repo_root: Path, replay: bool = False) -> dict:
         try:
             second = build_once(repo_root, replay_dir, env)
             compare_replays(first, second)
-            first["replay"] = {"status": "passed", "comparison": "normalized text and page count"}
+            first["replay"] = {
+                "status": "passed", "comparison": "normalized text and page count",
+                "pdf_bytes_equal": first["pdf_sha256"] == second["pdf_sha256"],
+            }
         except VerificationError as error:
             first["status"] = "failed"
             first["error"] = str(error)
@@ -340,7 +370,8 @@ def main() -> int:
         return 1
     print(f"Verification passed: {report['page_count']} pages; evidence in build/verification/")
     if args.replay:
-        print("Replay passed: normalized extracted text and page count match (not a byte-level PDF comparison)")
+        equality = "match" if report["replay"]["pdf_bytes_equal"] else "differ"
+        print(f"Replay passed: normalized text and page count match; PDF bytes {equality} (same toolchain only)")
     return 0
 
 

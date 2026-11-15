@@ -246,7 +246,10 @@
 \keywords{}
 \newcommand*{\orcid}[1]{\def\orcidname{#1}}
 \orcid{}
+% Readable after the standard title-page cleanup clears \@title.
+\newcommand*{\thesistitle}{\@title}
 \renewcommand\maketitle{
+	\global\let\thesistitle\@title
 	\btypeout{Title Page}
 	\hypersetup{pdftitle={\@title}}
 	\hypersetup{pdfsubject=\subjectname}
@@ -277,6 +280,8 @@
 			{\large A thesis submitted in total fulfillment for the \par}
 			{\large degree of \degreename \par}
 			\bigskip
+			{\Large \submissiondatename \par}
+			\bigskip
 			\bigskip
 			{\large in the \par}
 			{\large \deptname \par}
@@ -285,7 +290,6 @@
 			\bigskip
 			\bigskip
 			\bigskip
-			{\Large \submissiondatename \par}
 			\bigskip
 		\end{center}
 		\par
@@ -321,7 +325,7 @@
 		\bigskip
 		{\normalsize \thesistypename\par}
 		\bigskip
-		{\normalsize\bf \@title \par}
+		{\normalsize\bf \thesistitle \par}
 		\medskip
 		{\normalsize by \authornames \par}
 		\bigskip
