@@ -195,6 +195,10 @@ def validate_rendered(info: str, text: str, configuration: dict) -> dict:
     if positions != sorted(positions) or len(set(positions)) != len(positions):
         raise QualificationError("Incorrect rendered title metadata order")
     pages = text.split("\f")
+    if len(pages) > 1 and not pages[-1].strip():
+        pages.pop()  # Poppler normally ends text extraction with a form feed.
+    if len(pages) != page_count:
+        raise QualificationError("Extracted physical page count differs from PDF metadata")
     abstract_pages = [
         index for index, page in enumerate(pages)
         if index > 0
