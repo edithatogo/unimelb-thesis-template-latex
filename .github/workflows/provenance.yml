@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Clean verified example and final-byte provenance
+      - name: Fresh clean-source verification and final-byte provenance
         uses: xu-cheng/texlive-action@22c04326a5d855880f9d39bb955138bf11c6df80 # v3
         with:
           docker_image: ghcr.io/xu-cheng/texlive-debian:latest@sha256:78ac2204b8df113aca0561e8f173ad5b89ee51e90795173d2fe9bcf0fbce162e
@@ -42,7 +42,7 @@ jobs:
             export DEBIAN_FRONTEND=noninteractive
             apt-get update -qq
             apt-get install --yes --no-install-recommends git make python3 qpdf poppler-utils
-            make verify
+            make test
             python3 -m scripts.provenance_manifest
       - name: Make provenance available to artifact uploader
         if: always()
