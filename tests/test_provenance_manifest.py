@@ -5,6 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from types import SimpleNamespace
+import sys
 from scripts import provenance_manifest as m
 
 FONTS=("name  type  encoding  emb sub uni object ID\n"
@@ -34,6 +36,43 @@ class ProvenanceTests(unittest.TestCase):
 
     def create(self):
         with patch.object(m,'run_command',side_effect=self.fake_command):return m.create_manifest(self.root)
+
+    def test_cli_forces_fresh_clean_build_before_source_binding(self):
+        self.receipt['status']='failed';self.save()
+        executed=[]
+        def verified(root):
+            executed.append(root)
+            self.receipt['status']='passed';self.save()
+            return self.receipt
+        fake=SimpleNamespace(verify=verified)
+        with patch.object(m,'ROOT',self.root),patch.object(m,'run_command',side_effect=self.fake_command), \
+             patch.dict(sys.modules,{'scripts.verify':fake}):
+            self.assertEqual(m.main([]),0)
+        self.assertEqual(executed,[self.root])
+        result=json.loads((self.folder/'provenance.json').read_text())
+        self.assertEqual(result['source_binding'],'fresh-verified-clean-checkout')
+        self.assertEqual(result['source']['revision'],'f'*40)
+
+    def test_dirty_checkout_refuses_to_bind_prior_pdf(self):
+        def dirty(args,**kwargs):
+            if args[0]=='git' and 'status' in args:return ' M example/Thesis.tex\n'
+            return self.fake_command(args,**kwargs)
+        with patch.object(m,'run_command',side_effect=dirty), \
+             self.assertRaisesRegex(m.ProvenanceError,'clean'):
+            m.run_fresh_verify(self.root)
+
+    def test_revision_changed_while_building_cannot_bind_receipt(self):
+        calls=[]
+        def changing(args,**kwargs):
+            if args[0]=='git' and 'rev-parse' in args:
+                calls.append(1)
+                return ('a' if len(calls)==1 else 'b')*40
+            return self.fake_command(args,**kwargs)
+        fake=SimpleNamespace(verify=lambda root:self.receipt)
+        with patch.object(m,'run_command',side_effect=changing), \
+             patch.dict(sys.modules,{'scripts.verify':fake}), \
+             self.assertRaisesRegex(m.ProvenanceError,'changed'):
+            m.run_fresh_verify(self.root)
 
     def test_provenance_is_evidence_not_reproducibility(self):
         result=self.create()
