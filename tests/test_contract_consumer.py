@@ -53,6 +53,11 @@ class PdfProjectionTests(unittest.TestCase):
             }
         }
 
+    def test_probe_initializes_legacy_pdf_metadata_commands(self):
+        source = consumer.render_source(self.configuration)
+        self.assertIn(r"\subject{", source)
+        self.assertIn(r"\keywords{", source)
+
     def test_supported_fixture_projects_escaped_source_no_shell_escape(self):
         source = consumer.render_source(self.configuration)
         self.assertIn(r'\title{Synthetic \& safe \# title}', source)
