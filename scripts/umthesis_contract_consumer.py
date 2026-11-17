@@ -253,6 +253,7 @@ def main(argv=None):
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)
     args = parser.parse_args(argv)
+    attempted_outputs = []
     try:
         paths = (args.input.absolute(), args.output.absolute(), args.report.absolute())
         if len(set(paths)) != 3 or any(p.is_symlink() for p in paths):
@@ -268,12 +269,17 @@ def main(argv=None):
         # Inputs are already validated before either file can be created.
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.report.parent.mkdir(parents=True, exist_ok=True)
+        attempted_outputs.append(args.output)
         args.output.write_text(tex, encoding="utf-8")
+        attempted_outputs.append(args.report)
         args.report.write_text(json.dumps(receipt, sort_keys=True, indent=2) + "\n",
                                encoding="utf-8")
     except (ConsumerError, UnicodeError, OSError, json.JSONDecodeError) as exc:
-        if args.output.exists() and args.output != args.input:
-            args.output.unlink()
+        # Only remove paths that this invocation actually began writing.
+        # Never delete a preexisting output on a failed preflight.
+        for created in attempted_outputs:
+            if created.exists() and created.is_file() and not created.is_symlink():
+                created.unlink()
         code = exc.code if isinstance(exc, ConsumerError) else "invalid-io-or-json"
         print("umthesis-latex: " + code, file=sys.stderr)
         return 2
