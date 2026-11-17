@@ -1,0 +1,61 @@
+name: Provenance manifest
+
+on:
+  pull_request:
+    paths:
+      - "scripts/provenance_manifest.py"
+      - "tests/test_provenance_manifest.py"
+      - "tests/test_provenance_safety.py"
+      - "docs/provenance.md"
+      - ".github/workflows/provenance.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/provenance_manifest.py"
+      - "tests/test_provenance_manifest.py"
+      - "tests/test_provenance_safety.py"
+      - "docs/provenance.md"
+      - ".github/workflows/provenance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: provenance-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  provenance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Clean verified example and final-byte provenance
+        uses: xu-cheng/texlive-action@22c04326a5d855880f9d39bb955138bf11c6df80 # v3
+        with:
+          docker_image: ghcr.io/xu-cheng/texlive-debian:latest@sha256:78ac2204b8df113aca0561e8f173ad5b89ee51e90795173d2fe9bcf0fbce162e
+          run: |
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq
+            apt-get install --yes --no-install-recommends git make python3 qpdf poppler-utils
+            make verify
+            python3 -m scripts.provenance_manifest
+      - name: Make provenance available to artifact uploader
+        if: always()
+        run: |
+          if [ -d build/verification ]; then
+            sudo chown -R "$(id -u):$(id -g)" build/verification
+            chmod -R u+rX build/verification
+          fi
+      - name: Retain final-byte provenance receipt
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: thesis-provenance-synthetic
+          path: build/verification/provenance.json
+          if-no-files-found: warn
+          retention-days: 14
