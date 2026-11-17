@@ -1,0 +1,70 @@
+{
+  "contract_version": "1.0.0",
+  "purpose": "deposit-public",
+  "layout": "default",
+  "double_sided": false,
+  "identity": "identified",
+  "output": "pdf",
+  "pdf_standards": [],
+  "language": "en",
+  "label_locale": "en",
+  "bibliography": {
+    "mode": "unified",
+    "style": "apa"
+  },
+  "metadata": {
+    "title": "Illustrative synthetic resource rights",
+    "author": {
+      "student_record_name": "Synthetic Student",
+      "orcid": "0000-0000-0000-0001"
+    },
+    "degree": {
+      "kind": "doctoral",
+      "course": "Doctor of Philosophy"
+    },
+    "academic_units": [
+      "Synthetic School"
+    ],
+    "submission": {
+      "month": "2026-11"
+    },
+    "abstract": "Synthetic metadata, not submission material.",
+    "declarations": {
+      "original_work": true,
+      "word_count": 1200
+    },
+    "resources": [
+      {
+        "id": "synthetic-image",
+        "kind": "image",
+        "path": "assets/fictional-chart.svg"
+      },
+      {
+        "id": "fictional-paper",
+        "kind": "document",
+        "path": "resources/fictional-paper.pdf"
+      }
+    ],
+    "rights": [
+      {
+        "resource_id": "synthetic-image",
+        "status": "owned"
+      },
+      {
+        "resource_id": "fictional-paper",
+        "status": "excluded"
+      }
+    ],
+    "publications": [
+      {
+        "id": "paper-demo",
+        "title": "A fictional paper",
+        "status": "draft",
+        "resource_ids": [
+          "fictional-paper"
+        ]
+      }
+    ]
+  },
+  "approval_refs": {}
+}
