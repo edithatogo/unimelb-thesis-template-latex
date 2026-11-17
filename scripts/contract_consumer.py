@@ -144,6 +144,8 @@ def render_source(configuration: dict) -> str:
         + rf"\authors{{{vals['author']}}}" + "\n"
         + rf"\degree{{{vals['degree']}}}" + "\n"
         + r"\thesistype{Synthetic doctoral specimen}" + "\n"
+        + r"\subject{Synthetic metadata qualification}" + "\n"
+        + r"\keywords{synthetic, contract, verification}" + "\n"
         + rf"\submissiondate{{{vals['submission_date']}}}" + "\n"
         + r"\university{The University of Melbourne}" + "\n"
         + r"\department{Synthetic Department}" + "\n"
