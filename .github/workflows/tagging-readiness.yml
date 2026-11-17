@@ -1,0 +1,62 @@
+name: Tagging compatibility inventory
+
+on:
+  pull_request:
+    paths:
+      - "template/Thesis.cls"
+      - "template/thesis-science.sty"
+      - "scripts/tagging_inventory.py"
+      - "tests/test_tagging_inventory.py"
+      - "docs/accessibility-readiness.md"
+      - ".github/workflows/tagging-readiness.yml"
+  push:
+    branches: [main]
+    paths:
+      - "template/Thesis.cls"
+      - "template/thesis-science.sty"
+      - "scripts/tagging_inventory.py"
+      - "tests/test_tagging_inventory.py"
+      - "docs/accessibility-readiness.md"
+      - ".github/workflows/tagging-readiness.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tagging-inventory-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tagging-inventory:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test inventory and review package imports
+        run: |
+          python3 -m unittest discover -s tests -p 'test_tagging_inventory.py' -v
+          mkdir -p build
+          python3 -m scripts.tagging_inventory > build/a11y-readiness.json
+      - name: Reject unjustified accessible-output claims
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          document = json.loads(Path('build/a11y-readiness.json').read_text())
+          if (document['status'] != 'tagging-unqualified'
+              or document['pdf_ua_qualified'] is not False
+              or document['pdf_a_qualified'] is not False
+              or document['direct_package_count'] < 1):
+              raise SystemExit('The inventory cannot certify tagged PDF accessibility')
+          PY
+      - name: Retain source-level compatibility observations
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: latex-tagging-readiness
+          path: build/a11y-readiness.json
+          if-no-files-found: error
+          retention-days: 14
