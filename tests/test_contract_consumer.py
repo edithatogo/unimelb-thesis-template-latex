@@ -95,13 +95,27 @@ class PdfProjectionTests(unittest.TestCase):
     def test_rendered_content_must_match_observed_pdf_not_toc_only(self):
         page = 'Synthetic & safe # title\nSynthetic Student\nDoctor of Philosophy\nNovember 2026\nSynthetic School'
         info = 'Title: Synthetic & safe # title\nAuthor: Synthetic Student\nPages: 2\n'
-        result = consumer.validate_rendered(info, page + '\fSynthetic chapter\f', self.configuration)
+        abstract = 'Abstract\nSynthetic & safe # title\nSynthetic Student\nA synthetic summary.'
+        result = consumer.validate_rendered(info, page + '\f' + abstract + '\f', self.configuration)
         self.assertEqual(result['physical_pages'], 2)
+        self.assertEqual(result['abstract_page'], 2)
         self.assertIn('title_page', result)
         with self.assertRaisesRegex(consumer.QualificationError, 'title'):
             consumer.validate_rendered(info, 'Contents\nSynthetic & safe # title\fSynthetic chapter', self.configuration)
         with self.assertRaisesRegex(consumer.QualificationError, 'metadata'):
             consumer.validate_rendered(info.replace('Synthetic Student', 'Wrong'), page, self.configuration)
+
+    def test_abstract_omission_or_toc_entry_never_qualifies_abstract(self):
+        page = 'Synthetic & safe # title\nSynthetic Student\nDoctor of Philosophy\nNovember 2026\nSynthetic School'
+        info = 'Title: Synthetic & safe # title\nAuthor: Synthetic Student\nPages: 2\n'
+        for second in (
+            'Synthetic chapter with no abstract',
+            'Contents\nAbstract 2\nA synthetic summary.',
+            'Abstract\nSynthetic & safe # title\nSynthetic Student\nWrong abstract text',
+            'Abstract\nSynthetic & safe # title\nA synthetic summary.',
+        ):
+            with self.subTest(second=second), self.assertRaisesRegex(consumer.QualificationError, 'abstract'):
+                consumer.validate_rendered(info, page + '\f' + second + '\f', self.configuration)
 
 
 class OutputSafetyTests(unittest.TestCase):
@@ -115,6 +129,29 @@ class OutputSafetyTests(unittest.TestCase):
                 status = consumer.main(['--upstream', str(root / 'missing'), '--output', str(output)])
             self.assertEqual(status, 1)
             self.assertNotEqual(json.loads(output.read_text())['status'], 'passed')
+
+    def test_output_parent_traversal_never_overwrites_existing_source(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            original = root / 'README.md'
+            original.write_text('PRESERVE_THIS_SOURCE', encoding='utf-8')
+            (root / 'build' / 'contract').mkdir(parents=True)
+            malicious = root / 'build' / 'contract' / '..' / '..' / 'README.md'
+            with patch.object(consumer, 'ROOT', root):
+                with self.assertRaisesRegex(consumer.QualificationError, 'traversal|Output'):
+                    consumer.prepare_output(malicious)
+            self.assertEqual(original.read_text(encoding='utf-8'), 'PRESERVE_THIS_SOURCE')
+
+    def test_main_rejects_parent_traversal_before_receipt_write(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            original = root / 'README.md'
+            original.write_text('PRESERVE_THIS_SOURCE', encoding='utf-8')
+            (root / 'build' / 'contract').mkdir(parents=True)
+            malicious = root / 'build' / 'contract' / '..' / '..' / 'README.md'
+            with patch.object(consumer, 'ROOT', root), self.assertRaisesRegex(consumer.QualificationError, 'traversal|Output'):
+                consumer.main(['--upstream', str(root/'missing'), '--output', str(malicious)])
+            self.assertEqual(original.read_text(encoding='utf-8'), 'PRESERVE_THIS_SOURCE')
 
     def test_symlinked_parent_cannot_redirect_receipts(self):
         with tempfile.TemporaryDirectory() as td:
@@ -194,7 +231,7 @@ class ExecutedPathTests(unittest.TestCase):
             if command[0] == 'pdfinfo':
                 return 'Title: Synthetic Thesis\nAuthor: Example Scholar\nPages: 3\n'
             if command[0] == 'pdftotext':
-                return 'Synthetic Thesis\nExample Scholar\nDoctor of Philosophy\nNovember 2026\nSynthetic School\fSynthetic text'
+                return 'Synthetic Thesis\nExample Scholar\nDoctor of Philosophy\nNovember 2026\nSynthetic School\fAbstract\nSynthetic Thesis\nExample Scholar\nSynthetic summary.\fSynthetic text'
             return ''
         fake_verify = SimpleNamespace(run_command=run, validate_log=lambda text: None)
         with tempfile.TemporaryDirectory() as td, patch.dict(sys.modules, {'scripts.verify': fake_verify}):
