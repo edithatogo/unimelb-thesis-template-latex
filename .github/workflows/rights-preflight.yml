@@ -1,0 +1,58 @@
+name: Rights projection preflight
+
+on:
+  pull_request:
+    paths:
+      - "scripts/rights_projection.py"
+      - "tests/test_rights_projection.py"
+      - "examples/public-rights-synthetic.json"
+      - "docs/rights-preflight.md"
+      - ".github/workflows/rights-preflight.yml"
+  push:
+    branches: [main]
+    paths:
+      - "scripts/rights_projection.py"
+      - "tests/test_rights_projection.py"
+      - "examples/public-rights-synthetic.json"
+      - "docs/rights-preflight.md"
+      - ".github/workflows/rights-preflight.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rights-preflight-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rights-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test synthetic rights decisions and leak rejection
+        run: python3 -m unittest discover -s tests -p 'test_rights_projection.py' -v
+      - name: Generate candidate public-deposit plan
+        run: |
+          mkdir -p build
+          python3 -m scripts.rights_projection examples/public-rights-synthetic.json > build/rights-preflight.json
+      - name: Enforce no automatic release authority
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path("build/rights-preflight.json").read_text())
+          if result["status"] != "plan-only" or result["release_authorized"] is not False or result["requires_output_scan"] is not True:
+              raise SystemExit("Synthetic rights plan incorrectly claims release authority")
+          PY
+      - name: Retain synthetic planning evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rights-preflight-synthetic
+          path: build/rights-preflight.json
+          if-no-files-found: error
+          retention-days: 14
