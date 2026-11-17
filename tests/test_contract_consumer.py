@@ -105,6 +105,13 @@ class PdfProjectionTests(unittest.TestCase):
         with self.assertRaisesRegex(consumer.QualificationError, 'metadata'):
             consumer.validate_rendered(info.replace('Synthetic Student', 'Wrong'), page, self.configuration)
 
+    def test_extracted_physical_page_count_must_match_pdf_report(self):
+        page = 'Synthetic & safe # title\nSynthetic Student\nDoctor of Philosophy\nNovember 2026\nSynthetic School'
+        abstract = 'Abstract\nSynthetic & safe # title\nSynthetic Student\nA synthetic summary.'
+        info = 'Title: Synthetic & safe # title\nAuthor: Synthetic Student\nPages: 3\n'
+        with self.assertRaisesRegex(consumer.QualificationError, 'page count'):
+            consumer.validate_rendered(info, page + '\f' + abstract + '\f', self.configuration)
+
     def test_abstract_omission_or_toc_entry_never_qualifies_abstract(self):
         page = 'Synthetic & safe # title\nSynthetic Student\nDoctor of Philosophy\nNovember 2026\nSynthetic School'
         info = 'Title: Synthetic & safe # title\nAuthor: Synthetic Student\nPages: 2\n'
