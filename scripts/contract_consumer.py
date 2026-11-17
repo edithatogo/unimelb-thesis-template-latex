@@ -194,7 +194,18 @@ def validate_rendered(info: str, text: str, configuration: dict) -> dict:
         raise QualificationError("Missing title metadata from first physical page")
     if positions != sorted(positions) or len(set(positions)) != len(positions):
         raise QualificationError("Incorrect rendered title metadata order")
-    return {"title_page": 1, "physical_pages": page_count, "metadata_fields": 5}
+    pages = text.split("\f")
+    abstract_pages = [
+        index for index, page in enumerate(pages)
+        if index > 0
+        and any(line.strip() == "Abstract" for line in page.splitlines())
+        and all(" ".join(vals[key].split()) in " ".join(page.split())
+                for key in ("title", "author", "abstract"))
+    ]
+    if len(abstract_pages) != 1:
+        raise QualificationError("Missing or ambiguous rendered abstract on a separate physical page")
+    return {"title_page": 1, "abstract_page": abstract_pages[0] + 1,
+            "physical_pages": page_count, "metadata_fields": 5}
 
 
 def check_fixture(bundle, module, identifier: str) -> dict:
@@ -259,6 +270,8 @@ def prepare_output(path: Path) -> None:
     root = ROOT.absolute()
     target = path.absolute()
     allowed = root / "build" / "contract"
+    if ".." in target.parts:
+        raise QualificationError("Refusing output path parent traversal")
     if target == allowed or not target.is_relative_to(allowed):
         raise QualificationError("Output must reside within build/contract")
     candidate = root
