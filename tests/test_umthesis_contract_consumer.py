@@ -168,6 +168,22 @@ class UmthesisLatexConsumerTests(unittest.TestCase):
             self.assertFalse(receipt.exists())
             self.assertNotIn("Synthetic Student", result.stderr)
 
+
+    def test_cli_refuses_existing_output_without_deleting_or_modifying_it(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            path = root / "in.json"
+            path.write_text(json.dumps(envelope()))
+            out = root / "fragment.tex"
+            out.write_text("PRESERVE-EXISTING-BYTES", encoding="utf-8")
+            report = root / "receipt.json"
+            cmd = [sys.executable, "-m", "scripts.umthesis_contract_consumer",
+                   "--input", str(path), "--output", str(out), "--report", str(report)]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(out.read_text(encoding="utf-8"), "PRESERVE-EXISTING-BYTES")
+            self.assertFalse(report.exists())
+
     def test_cli_creates_consumer_output_but_no_institutional_claim(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
