@@ -82,6 +82,29 @@ def _require_source(path: Path) -> None:
         raise ProvenanceError('required source file missing or unsafe')
 
 
+def _git_identity(root: Path) -> tuple[str, bool]:
+    revision = run_command(['git','-C',str(root),'rev-parse','HEAD'],cwd=root,timeout=15).strip()
+    if not re.fullmatch('[a-f0-9]{40}', revision):
+        raise ProvenanceError('invalid Git source revision')
+    dirty = bool(run_command(['git','-C',str(root),'status','--porcelain','--untracked-files=all'],cwd=root,timeout=15).strip())
+    return revision, dirty
+
+
+def run_fresh_verify(root: Path) -> str:
+    """Bind the current clean source checkout to a newly validated output."""
+    before, dirty = _git_identity(root)
+    if dirty:
+        raise ProvenanceError('source checkout must be clean before verification')
+    from scripts import verify as existing_verifier
+    verified = existing_verifier.verify(root)
+    if verified.get('status') != 'passed':
+        raise ProvenanceError('fresh native verifier did not pass')
+    after, dirty_after = _git_identity(root)
+    if after != before or dirty_after:
+        raise ProvenanceError('source checkout changed during fresh verification')
+    return before
+
+
 def create_manifest(root: Path) -> dict:
     root = root.absolute()
     folder = root / 'build' / 'verification'
@@ -106,10 +129,7 @@ def create_manifest(root: Path) -> dict:
         candidate = root / name
         _require_source(candidate)
         source_hashes[name] = sha256(candidate)
-    revision = run_command(['git','-C',str(root),'rev-parse','HEAD'],cwd=root,timeout=15).strip()
-    if not re.fullmatch('[a-f0-9]{40}', revision):
-        raise ProvenanceError('invalid Git source revision')
-    dirty = bool(run_command(['git','-C',str(root),'status','--porcelain','--untracked-files=no'],cwd=root,timeout=15).strip())
+    revision, dirty = _git_identity(root)
     fonts = run_command(['pdffonts',str(pdf)],cwd=root,timeout=15)
     lines = [line for line in fonts.splitlines() if line.strip()]
     if len(lines) < 3 or not lines[0].startswith('name ') or 'emb' not in lines[0]:
@@ -153,6 +173,8 @@ def validate_output_path(path: Path) -> Path:
     allowed = root / 'build' / 'verification'
     if '..' in target.parts or target.parent != allowed:
         raise ProvenanceError('output path must be an immediate child of build/verification without traversal')
+    if target.name != 'provenance.json':
+        raise ProvenanceError('only provenance.json is allowed; verifier inputs must never be overwritten')
     current = root
     for part in target.relative_to(root).parts:
         current = current / part
@@ -170,7 +192,11 @@ def main(argv: list[str] | None = None) -> int:
     path = validate_output_path(ROOT / args.output)
     path.write_text('{"schema_version":1,"status":"running"}\n',encoding='utf-8')
     try:
+        verified_revision = run_fresh_verify(ROOT)
         result = create_manifest(ROOT)
+        if result['source']['revision'] != verified_revision or result['source']['tracked_dirty']:
+            raise ProvenanceError('source checkout changed after fresh verification')
+        result['source_binding'] = 'fresh-verified-clean-checkout'
     except (OSError, ProvenanceError) as exc:
         path.write_text('{"schema_version":1,"status":"failed"}\n',encoding='utf-8')
         print(f'Provenance not established: {type(exc).__name__}',file=sys.stderr)
