@@ -28,7 +28,15 @@ class ProvenanceSafetyTests(unittest.TestCase):
             (root/'build/verification').rename(root/'other')
             (root/'build/verification').symlink_to(root/'other',target_is_directory=True)
             with patch.object(m,'ROOT',root),self.assertRaisesRegex(m.ProvenanceError,'symlink'):
-                m.validate_output_path(root/'build/verification/report.json')
+                m.validate_output_path(root/'build/verification/provenance.json')
+
+    def test_output_cannot_overwrite_pdf_or_verifier_receipt(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'build/verification').mkdir(parents=True)
+            with patch.object(m,'ROOT',root):
+                for name in ('Thesis.pdf','report.json','Thesis.log'):
+                    with self.subTest(name=name),self.assertRaisesRegex(m.ProvenanceError,'provenance'):
+                        m.validate_output_path(root/'build/verification'/name)
 
     def test_no_old_success_report_survives_failed_cli(self):
         with tempfile.TemporaryDirectory() as d:
