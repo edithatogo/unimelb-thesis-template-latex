@@ -5,8 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-from types import SimpleNamespace
-import sys
+from scripts import verify as native_verifier
 from scripts import provenance_manifest as m
 
 FONTS=("name  type  encoding  emb sub uni object ID\n"
@@ -44,9 +43,8 @@ class ProvenanceTests(unittest.TestCase):
             executed.append(root)
             self.receipt['status']='passed';self.save()
             return self.receipt
-        fake=SimpleNamespace(verify=verified)
         with patch.object(m,'ROOT',self.root),patch.object(m,'run_command',side_effect=self.fake_command), \
-             patch.dict(sys.modules,{'scripts.verify':fake}):
+             patch.object(native_verifier, 'verify', side_effect=verified):
             self.assertEqual(m.main([]),0)
         self.assertEqual(executed,[self.root])
         result=json.loads((self.folder/'provenance.json').read_text())
@@ -68,9 +66,8 @@ class ProvenanceTests(unittest.TestCase):
                 calls.append(1)
                 return ('a' if len(calls)==1 else 'b')*40
             return self.fake_command(args,**kwargs)
-        fake=SimpleNamespace(verify=lambda root:self.receipt)
         with patch.object(m,'run_command',side_effect=changing), \
-             patch.dict(sys.modules,{'scripts.verify':fake}), \
+             patch.object(native_verifier, 'verify', return_value=self.receipt), \
              self.assertRaisesRegex(m.ProvenanceError,'changed'):
             m.run_fresh_verify(self.root)
 
