@@ -1,18 +1,25 @@
 # Verified PDF provenance sidecar
 
-The existing `make verify` generates `build/verification/Thesis.pdf` and its
-verification receipt. `scripts/provenance_manifest.py` adds a **separate,
-optional evidence sidecar** from those final retained bytes. It does not alter
-the existing verifier, class, release workflow, or required dependencies.
+`scripts/provenance_manifest.py` wraps the existing native verifier with
+a **new clean, same-run build and source-identity check**. It refuses to reuse
+a PDF from another source revision or a dirty checkout. It then generates a
+separate optional evidence sidecar from the newly verified output bytes.
+The class, native verifier and release workflow remain unchanged.
 
 ## Usage
 
 With a complete TeX Live installation, qpdf and Poppler available:
 
 ```sh
-make verify
+make test
 python3 -m scripts.provenance_manifest
 ```
+
+The Python command performs a fresh native `verify.verify` build itself after
+checking the source revision and an entirely clean Git worktree, then checks
+the revision and worktree again. It rejects untracked inputs as well as tracked
+changes. It will fail rather than attaching a previously built PDF to a later
+checkout.
 
 Successful execution writes `build/verification/provenance.json`. Its
 `status: evidence-only` is intentionally **not** a claim of reproducible
@@ -34,12 +41,12 @@ A failing/missing receipt, changed PDF bytes, unsafe source symlink,
 mismatching font count, invalid source epoch or missing tool version blocks
 creation of a success sidecar. The CLI overwrites a prior success sidecar
 with a failure marker if current validation fails. Its output path is
-restricted to a direct child of `build/verification`; parent traversal and
-symlink redirection are rejected.
+restricted to the literal `build/verification/provenance.json` filename;
+parent traversal, symlink redirection, and overwriting verifier inputs are rejected.
 
 The separate `Provenance manifest` GitHub Actions job runs a clean
-`make verify` then collects this evidence with the same pinned TeX Live
-image as the existing CI. The manifest is uploaded as a bounded-run artifact,
+`make test`, then invokes the source-bound fresh verifier and evidence
+generator with the same pinned TeX Live image as the existing CI. The manifest is uploaded as a bounded-run artifact,
 not published automatically or included in tags without a deliberate release
 qualification.
 
