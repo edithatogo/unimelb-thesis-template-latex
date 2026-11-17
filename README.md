@@ -9,6 +9,7 @@ This is a modernized version of the University of Melbourne PhD thesis template.
 * Optional Scientific Authoring: A separate [scientific extension](docs/scientific-authoring.md) provides advanced mathematics, algorithms, PGFPlots, flexible tables and structured summaries, with its own synthetic rendered-output validation.
 * Automated Build: Includes a `.latexmkrc` file for automated compilation with `lualatex` and `biber`.
 * Verification: Clean builds check PDF structure, rendered content, bibliography, glossary and cross-references; behavioral tests exercise the verifier.
+* Shared UMTHESIS v1: A [pinned canonical-contract consumer](docs/umthesis-contract.md) qualifies shared synthetic metadata/negative fixtures and a bounded native LuaLaTeX output; full institutional and accessibility qualification remains separate.
 * Clear Customization: Well-commented class file (`template/Thesis.cls`) and example files.
 * CI/CD Integration: Automated verification, workflow linting, dependency review, privacy scanning and tag-only releases; formatting remains opt-in.
 * Thesis Metadata: Examples include ORCID support and declarations, subject to the author's institutional review.
@@ -46,6 +47,8 @@ These committed examples illustrate formatting and structure. They are not proof
 3. Run `make test` for the fast verifier suite without TeX. Run `make replay` for two fresh builds that must produce the same normalized text and page count in the same toolchain; replay evidence is retained in `build/replay/`.
 
 For the optional scientific-authoring fixture, run `make science-check` (Python tests plus a fresh LuaLaTeX build and PDF checks). The base verifier remains unchanged.
+
+For the separate shared-contract candidate check, see [UMTHESIS v1](docs/umthesis-contract.md) and run `make contract-check` after preparing the exact pinned upstream checkout. It is not a replacement for `make verify`.
 
 The output assertions describe this repository's example. Update them deliberately when adapting the example to a different thesis. They do not replace visual review or institutional requirements. See [quality checks](docs/quality-checks.md) for verification and coverage limits.
 
